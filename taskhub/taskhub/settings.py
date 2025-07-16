@@ -13,7 +13,7 @@ import environ
 import os
 
 env = environ.Env(
-        DEBUG=(bool, False)
+        DEBUG=(bool, True)
 )
 
 from pathlib import Path
