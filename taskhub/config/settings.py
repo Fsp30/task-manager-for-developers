@@ -4,7 +4,8 @@ from pathlib import Path
 
 env = environ.Env(DEBUG=(bool, True))
 BASE_DIR = Path(__file__).resolve().parent.parent
-env.read_env(BASE_DIR / 'taskhub' / 'environments' /'.env')
+env.read_env(BASE_DIR / 'config' / 'environments' /'.env')
+SET_DIR =Path(__file__).resolve().parent.parent. parent
 
 
 
@@ -23,7 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'social_django',
-    'repos'
+    'taskhub.infra.repos'
 ]
 
 MIDDLEWARE = [
@@ -36,12 +37,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'taskhub.urls'
+ROOT_URLCONF = 'taskhub.interfaces.api.urls'
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': SET_DIR / 'db.sqlite3',
     }
 }
 
@@ -62,7 +63,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'taskhub.wsgi.application'
+WSGI_APPLICATION = 'taskhub.core.wsgi.application'
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -102,8 +103,8 @@ AUTHENTICATION_BACKENDS = (
 )
 
 DEBUG = env('DEBUG')
-SECRET_KEY = env('SECRET_KEY')
 
+SECRET_KEY = env('SECRET_KEY')
 SOCIAL_AUTH_GITHUB_KEY = env('SOCIAL_AUTH_GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET')
 
