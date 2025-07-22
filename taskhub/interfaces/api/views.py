@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from social_django.models import UserSocialAuth
-from .models.mongo_model import Task
+from ...core.models import Task
 
 from django.views.decorators.http import require_POST
 
