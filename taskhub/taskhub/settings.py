@@ -4,10 +4,10 @@ from pathlib import Path
 
 env = environ.Env(DEBUG=(bool, True))
 BASE_DIR = Path(__file__).resolve().parent.parent
-env.read_env(BASE_DIR / 'environments' / '.env')
+env.read_env(BASE_DIR / 'taskhub' / 'environments' /'.env')
 
 
-DEBUG = True
+
 
 ALLOWED_HOSTS = []
 
@@ -37,6 +37,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'taskhub.urls'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 TEMPLATES = [
     {
@@ -104,3 +111,4 @@ LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
