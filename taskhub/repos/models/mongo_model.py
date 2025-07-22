@@ -1,9 +1,7 @@
-from mongoengine import Document, StringField, DateTimeField, ReferenceField
+from mongoengine import Document, StringField, DateTimeField 
 import datetime
 
 class Task(Document):
-        title = StringField(required=True)
-        description = StringField()
-        created_at = DateTimeField(default=lambda: datetime.datetime.now(datetime.timezone.utc))
-
-        meta = {'collection': 'task'}
+    title = StringField(required=True)
+    description = StringField()
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
