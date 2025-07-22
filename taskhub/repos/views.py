@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from social_django.models import UserSocialAuth
+from .models.mongo_model import Task
+
+from django.views.decorators.http import require_POST
+
 
 def home(request):
     if request.user.is_authenticated:
@@ -25,3 +29,9 @@ def home(request):
                 <button>Login com GitHub</button>
             </a>
         """)
+
+@require_POST
+def create_task(request):
+    title = request.POST.get('title', 'Default task')
+    Task(title=title).save()
+    return HttpResponse('success, create task')
