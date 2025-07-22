@@ -32,6 +32,6 @@ def home(request):
 
 @require_POST
 def create_task(request):
-    title = request.POST.get('title', 'Default Task')
+    title = request.POST.get('title', 'Default task')
     Task(title=title).save()
     return HttpResponse('success, create task')
