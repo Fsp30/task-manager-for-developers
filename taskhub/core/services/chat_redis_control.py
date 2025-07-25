@@ -20,4 +20,9 @@ def get_chat_messages(chat_id:str):
         raw_messages = r.lrange(key, 0 , -1)
         return [json.loads(message) for message in raw_messages]
 
-def 
+def delete_chat(chat_id:str) -> bool:
+        key = f"chat:{chat_id}"
+        result = r.delete(key)
+        if(result != 1):
+                raise ValueError("failed delete chat")
+        get_chat_messages(chat_id)
