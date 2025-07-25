@@ -6,6 +6,7 @@ class ContentRepository(Document):
     discussionId = StringField(required=True)
     tag = DictField()
     created_at = DateTimeField(default=datetime.datetime.utcnow)
+    chat_id = StringField()
 
 class Note(ContentRepository):
     title = StringField(max_length=120, required=True)
