@@ -13,7 +13,7 @@ def save_message(chat_id:str, userId:str, message:str):
         }
         r.rpush(key, json.dumps(data))
         r.expire(key, 60 * 60 * 48)
-        get_chat_messages(chat_id)
+        return get_chat_messages(chat_id)
 
 def get_chat_messages(chat_id:str):
         key = f"chat:{chat_id}"
@@ -24,5 +24,5 @@ def delete_chat(chat_id:str) -> bool:
         key = f"chat:{chat_id}"
         result = r.delete(key)
         if(result != 1):
-                raise ValueError("failed delete chat")
-        get_chat_messages(chat_id)
+                raise ValueError("failed delete chat: invalid key or expired chat")
+        return result
