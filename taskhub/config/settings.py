@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'social_django',
     'taskhub.infra.repos'
 ]
 
@@ -49,15 +48,13 @@ DATABASES = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'taskhub' / 'interfaces' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -98,15 +95,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.github.GithubOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
 DEBUG = env('DEBUG')
 
 SECRET_KEY = env('SECRET_KEY')
-SOCIAL_AUTH_GITHUB_KEY = env('SOCIAL_AUTH_GITHUB_KEY')
-SOCIAL_AUTH_GITHUB_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET')
+GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID')
+GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET')
+GITHUB_CALLBACK_URL = env('GITHUB_CALLBACK_URL')
+
 
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
