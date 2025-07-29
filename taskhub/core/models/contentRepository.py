@@ -7,6 +7,9 @@ class ContentRepository(Document):
     tag = DictField()
     created_at = DateTimeField(default=datetime.datetime.utcnow)
     chat_id = StringField()
+    meta = {
+        'allow_inheritance': True
+    }
 
 class Note(ContentRepository):
     title = StringField(max_length=120, required=True)
