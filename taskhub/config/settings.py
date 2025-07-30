@@ -25,7 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'taskhub.infra.repos',
     'rest_framework', 
-    'rest_framework_mongoengine'
+    'rest_framework_mongoengine',
+    'taskhub.interfaces'
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
