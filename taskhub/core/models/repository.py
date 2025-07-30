@@ -2,7 +2,7 @@ import datetime
 from mongoengine import Document, StringField, DateTimeField, ReferenceField
 
 class Repository(Document):
-    repository_id = StringField(required=True)
+    repository_id = StringField(required=True, unique=True)
     admin_repository = ReferenceField('RepositoryPermission') 
     creator_Id = ReferenceField('User', required=True)
     enterpriseId = ReferenceField('Enterprise')
