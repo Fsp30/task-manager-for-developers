@@ -7,3 +7,7 @@ class User(Document):
     userName = StringField(max_length=100)
     created_at = DateTimeField(default=datetime.datetime.utcnow)
     linked_repository_id = ListField(StringField())  
+
+    @property
+    def is_authenticated(self):
+        return True
