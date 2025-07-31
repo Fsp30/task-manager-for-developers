@@ -13,9 +13,9 @@ from taskhub.interfaces.api.views import (
     repository_views,
     contentRepository_views,
     repositoryPermission_views,
-    user_views
 )
 from . import views_main
+from taskhub.interfaces.api.views.user_views import MeView
 
 
 router = DefaultRouter()
@@ -25,7 +25,7 @@ router.register(r'enterprise', enterprise_views.EnterpriseViewSet, basename='ent
 router.register(r'repository', repository_views.RepositoryViewSet, basename='repository')
 router.register(r'content_repository', contentRepository_views.ContentRepositoryViewSet, basename='content_repository')
 router.register(r'repository_permission', repositoryPermission_views.RepositoryPermissionViewSet, basename='repository_permission')
-router.register(r'users', user_views.UserViewSet, basename='users')
+from taskhub.interfaces.api.views.user_views import MeView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,5 +36,6 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
+    path('api/me/', MeView.as_view(), name='me'),
     path('', views_main.home, name='home'),
 ]
