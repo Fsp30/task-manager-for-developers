@@ -4,6 +4,7 @@ from django.conf import settings
 from requests_oauthlib import OAuth2Session
 from rest_framework_simplejwt.tokens import RefreshToken
 from taskhub.core.models.user import User
+from taskhub.utils.jwt import generate_custom_jwt
 
 def github_login(request):
     github = OAuth2Session(
@@ -48,12 +49,12 @@ def github_callback(request):
         user.save()
 
    
-    refresh = RefreshToken.for_user(user)
+    jwt_custon_refresh = generate_custom_jwt(user)
 
     request.session['user_data'] = {
         'login': git_id,
-        'token': token.get('access_token'),
-        'jwt': str(refresh.access_token),
+        'github_token': token.get('access_token'),
+        'jwt': jwt_custon_refresh,
     }
 
     return redirect('/')
