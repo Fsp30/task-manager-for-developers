@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>TaskHub - Login com GitHub</title>
 </head>
+
 <body>
     {% if user_data %}
-        <h1>Bem-vindo, {{ user_data.login }}!</h1>
-        <p><strong>Token:</strong> {{ user_data.token }}</p>
-        <a href="/logout/"><button>Logout</button></a>
+    <h1>Bem-vindo, {{ user_data.login }}!</h1>
+    <p><strong>Token da aplicação (JWT):</strong> {{ user_data.jwt }}</p>
+    <p><strong>Token do GitHub:</strong> {{ user_data.github_token }}</p>
+
+    <a href="/auth/logout/"><button>Logout</button></a>
     {% else %}
-        <h1>TaskHub</h1>
-        <p>Faça login para continuar:</p>
-        <a href="/auth/login/"><button>Login com GitHub</button></a>
+    <h1>TaskHub</h1>
+    <p>Faça login para continuar:</p>
+    <a href="/auth/login/"><button>Login com GitHub</button></a>
     {% endif %}
 </body>
+
 </html>

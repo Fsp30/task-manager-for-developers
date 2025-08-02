@@ -3,7 +3,7 @@ from mongoengine import Document, StringField, DateTimeField, ReferenceField, Li
 
 class Enterprise(Document):
     Owner_Id = ReferenceField('User', required=True)
-    gitId_enterprise = StringField(max_length=100)
+    gitId_enterprise = StringField(max_length=100, unique=True)
     enterpriseId = StringField(max_length=100, required=True)
     nameEnterprise = StringField(max_length=100)
     repositorys_Id = ListField(ReferenceField('Repository')) 
