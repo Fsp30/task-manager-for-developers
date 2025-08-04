@@ -25,3 +25,9 @@ class RepositoryPermissionFailDelete(CustomAppException):
     default_detail = "Falha ao deletar repository permission"
     default_code = "delete_repository_permission_failed"
     app_code = AppCode.REPOSITORY_PERMISSION_DELETE_FAILED
+
+class InvalidRepositoryAccess(CustomAppException):
+    status_code = ErrorsAppStatus.FORBIDDEN
+    default_detail = "Acesso negado ao repositório."
+    default_code = "repository_forbidden"
+    app_code = AppCode.REPOSITORY_PERMISSION_DETAIL
