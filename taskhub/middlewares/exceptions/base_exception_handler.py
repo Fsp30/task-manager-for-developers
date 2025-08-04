@@ -37,11 +37,6 @@ class CustomAppException(APIException):
 
 
 
-class InvalidRepositoryAccess(CustomAppException):
-    status_code = ErrorsAppStatus.FORBIDDEN
-    default_detail = "Acesso negado ao repositório."
-    default_code = "repository_forbidden"
-    app_code = AppCode.REPOSITORY_PERMISSION_DETAIL
 
 
 class ExternalAPIError(CustomAppException):
