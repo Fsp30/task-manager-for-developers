@@ -35,6 +35,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    "EXCEPTION_HANDLER": (
+        'taskhub.middlewares.exceptions.base_exception_handler.custom_exception_handler',
+    ),
+
+
 }
 
 MIDDLEWARE = [

@@ -18,6 +18,7 @@ class Note(ContentRepository):
     created_at = DateTimeField(default=datetime.datetime.utcnow)
 
 class Task(ContentRepository):
+    taskId = StringField(required=True)
     title = StringField(required=True)
     author = ReferenceField('User')
     resolversId = ListField(ReferenceField('User'))
