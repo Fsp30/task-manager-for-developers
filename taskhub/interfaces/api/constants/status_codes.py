@@ -83,9 +83,13 @@ class AppCode:
     USER_LIST_FAILED = 7101 
     USER_UPDATE_FAILED = 7102 
     USER_DELETE_FAILED = 7103 
-
-
     
+    TASK_CREATED_FAILED = 7200 
+    TASK_LIST_FAILED = 7201 
+    TASK_UPDATE_FAILED = 7202 
+    TASK_DELETE_FAILED = 7203 
+
+
 
 
 from rest_framework.status import( 
