@@ -28,16 +28,11 @@ def custom_exception_handler(exc, context):
             "data": None
         }, status=ErrorsAppStatus.SERVER_ERROR)
 
-
 class CustomAppException(APIException):
     status_code = ErrorsAppStatus.BAD_REQUEST
     default_detail = "Erro na aplicação"
     default_code = "application_error"
     app_code = None
-
-
-
-
 
 class ExternalAPIError(CustomAppException):
     status_code = ErrorsAppStatus.SERVICE_UNAVAILABLE
