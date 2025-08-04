@@ -10,7 +10,7 @@ class RepositoryAlreadyExists(CustomAppException):
 
 class RepositoryFailCreate(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
-    default_detail = "Falha ao criar enterprise"
+    default_detail = "Falha ao criar repository"
     default_code = "create_repository_failed"
     app_code = AppCode.REPOSITORY_CREATED_FAILED
 
