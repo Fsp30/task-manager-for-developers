@@ -1,6 +1,6 @@
 from taskhub.core.models.user import User
-from taskhub.core.models.repository import Repository
-from taskhub.core.models.repositoryPermission import RepositoryPermission
+from taskhub.core.models import Repository
+from taskhub.core.models import RepositoryPermission
 from taskhub.middlewares.exceptions import (
         UserAlreadyExists,UserFailCreate,UserFailDelete,UserFailList,UserFailUpdate,UserNotFound,UserPermissionDenied, RepositoryFailList, 
 )
