@@ -1,16 +1,15 @@
 from taskhub.core.models.user import User
 from taskhub.core.models.repository import Repository
+from taskhub.core.models.repositoryPermission import RepositoryPermission
 from taskhub.middlewares.exceptions import (
-        UserAlreadyExists,UserFailCreate,UserFailDelete,UserFailList,UserFailUpdate,UserNotFound,UserPermissionDenied, RepositoryFailList
+        UserAlreadyExists,UserFailCreate,UserFailDelete,UserFailList,UserFailUpdate,UserNotFound,UserPermissionDenied, RepositoryFailList, 
 )
 
 def create_user(gitId:str, email:str, userName:str):
         if User.objects(gitId=gitId).first():
                 raise UserAlreadyExists()
 
-        if(userName==''):
-                userName=gitId
-
+        userName = userName or gitId
         try:
                 created_user = User(
                         gitId=gitId,
@@ -37,7 +36,7 @@ def list_my_repository(gitId:str) -> list[Repository]:
         
         try:                
                 repository = Repository.objects(creator_Id=gitId).all()
-                return repository
+                return list(repository)
 
         except Exception as e:
                 raise RepositoryFailList() from e
@@ -71,6 +70,16 @@ def delete_user(gitId: str) -> bool:
         raise UserFailDelete(f"failed delete: {str(e)}") from e
         
 
+def get_my_permissions(gitId: str) -> list[RepositoryPermission]:
+    if not User.objects(gitId=gitId).first(): 
+        raise UserNotFound(f"User {gitId} not found")
+    
+    try:
+        permissions = RepositoryPermission.objects(repositoryPermissionId=gitId).all() 
+        return list(permissions)  
+    except Exception as e:
+        raise UserPermissionDenied(f"Permission denied or error occurred: {str(e)}") from e
+                
 
 
 
