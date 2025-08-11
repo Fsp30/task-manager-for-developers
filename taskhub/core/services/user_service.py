@@ -5,11 +5,25 @@ from taskhub.middlewares.exceptions import (
         UserAlreadyExists,UserFailCreate,UserFailDelete,UserFailList,UserFailUpdate,UserNotFound,UserPermissionDenied, RepositoryFailList, 
 )
 
-def create_user(gitId:str, email:str, userName:str):
-        if User.objects(gitId=gitId).first():
-                raise UserAlreadyExists()
 
-        userName = userName or gitId
+def get_user(gitId:str):
+        try:
+                user = User.objects(gitId=gitId).first()
+                if not user:
+                        raise UserNotFound()        
+                return user
+        except Exception as e:
+                raise UserFailList(f"failed: {str(e)}") from e
+
+def create_user(gitId:str, email:str, userName:str):
+        get_user(gitId)
+        try:
+                raise UserAlreadyExists(f"User with gitId '{gitId}' already exists")
+        except UserNotFound:
+                pass 
+        
+        
+        userName = userName or gitId 
         try:
                 created_user = User(
                         gitId=gitId,
@@ -20,15 +34,6 @@ def create_user(gitId:str, email:str, userName:str):
                 return created_user
         except Exception as e:
                 raise UserFailCreate() from e 
-
-def get_user(gitId:str):
-        try:
-                user = User.objects(gitId=gitId).first()
-                if not user:
-                        raise UserNotFound()        
-                return user
-        except Exception as e:
-                raise UserFailList(f"failed: {str(e)}") from e
 
 def list_my_repository(gitId:str) -> list[Repository]:
         if not User.objects(gitId=gitId).first():
