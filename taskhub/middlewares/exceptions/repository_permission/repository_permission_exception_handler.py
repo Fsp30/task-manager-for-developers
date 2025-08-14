@@ -49,3 +49,15 @@ class InvalidRepositoryAccess(CustomAppException):
     default_detail = "Acesso negado ao repositório"
     default_code = "repository_access_denied"
     app_code = AppCode.REPOSITORY_PERMISSION_DETAIL
+
+class RepositoryPermissionFailAddedUser(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao adicionar permissão de repositório"
+    default_code = "add_user_repository_permission_failed"
+    app_code = AppCode.USER_ADDED_PERMISSION_FAILED
+
+class RepositoryPermissionFailRemoveUser(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao remover permissão de repositório"
+    default_code = "remove_user_repository_permission_failed"
+    app_code = AppCode.ENTERPRISE_REMOVE_USER_FAILED
