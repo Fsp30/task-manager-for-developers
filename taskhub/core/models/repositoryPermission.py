@@ -1,7 +1,7 @@
-from mongoengine import Document, DictField,ReferenceField,ListField
+from mongoengine import Document, DictField,ReferenceField,ListField, StringField
 
 class RepositoryPermission(Document):
-    repositoryPermissionId = DictField(requred=True)
+    repositoryPermissionId = StringField(required=True, unique=True)
     admin_repository = ReferenceField('Repository', required=True)
     admin_users = ListField(ReferenceField('User'))
     
