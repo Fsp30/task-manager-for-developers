@@ -68,7 +68,7 @@ def list_repositories_enterprise(enterprise_id: str) -> List[Repository]:
         get_enterprise(enterprise_id) 
         repositories = Repository.objects(enterpriseId=enterprise_id).all()
         return list(repositories)
-    except EnterpriseNotFound:
+    except (EnterpriseNotFound, RepositoryNotFound):
         raise
     except Exception as e:
         raise RepositoryFailList(f"Failed to list repositories: {str(e)}") from e
