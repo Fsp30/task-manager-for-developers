@@ -24,7 +24,9 @@ from taskhub.middlewares.exceptions.repository_permission.repository_permission_
     RepositoryPermissionFailDelete,
     RepositoryPermissionFailUpdate,
     RepositoryPermissionNotFound,
-    InvalidRepositoryAccess
+    InvalidRepositoryAccess,
+    RepositoryPermissionFailList,
+    RepositoryPermissionFailDetail
 )
 from taskhub.middlewares.exceptions.repository.repository_exception_handler import (
     RepositoryAlreadyExists,
@@ -60,7 +62,10 @@ from taskhub.middlewares.exceptions.enterprise.enterprise_exception_handler impo
     EnterpriseFailList,
     EnterpriseFailUpdate,
     EnterpriseNotFound,
-    EnterprisePermissionDenied
+    EnterprisePermissionDenied,
+    EnterpriseFailAddedUser,
+    EnterpriseFailDetail,
+    EnterpriseFailRemoveUser
 )
 from taskhub.middlewares.exceptions.chat.chat_exception_handler import (
     ChatAlreadyExists,

@@ -49,3 +49,15 @@ class EnterprisePermissionDenied(CustomAppException):
     default_detail = "Permissão negada para acessar a enterprise"
     default_code = "enterprise_permission_denied"
     app_code = AppCode.ENTERPRISE_LIST_FAILED 
+
+class EnterpriseFailAddedUser(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao adiciona dev da enterprise"
+    default_code = "enterprise_dev_add_failed"
+    app_code = AppCode.USER_ADDED_ENTERPRISE_FAILED 
+
+class EnterpriseFailRemoveUser(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao remover dev da enterprise"
+    default_code = "enterprise_dev_add_failed"
+    app_code = AppCode.ENTERPRISE_REMOVE_USER_FAILED 
