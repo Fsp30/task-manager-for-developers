@@ -26,7 +26,9 @@ from taskhub.middlewares.exceptions.repository_permission.repository_permission_
     RepositoryPermissionNotFound,
     InvalidRepositoryAccess,
     RepositoryPermissionFailList,
-    RepositoryPermissionFailDetail
+    RepositoryPermissionFailDetail,
+    RepositoryPermissionFailAddedUser,
+    RepositoryPermissionFailRemoveUser
 )
 from taskhub.middlewares.exceptions.repository.repository_exception_handler import (
     RepositoryAlreadyExists,
