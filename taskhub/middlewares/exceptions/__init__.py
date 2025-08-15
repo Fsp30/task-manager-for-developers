@@ -55,7 +55,8 @@ from taskhub.middlewares.exceptions.content_repository.content_repository_except
     ContentRepositoryFailList,
     ContentRepositoryFailUpdate,
     ContentRepositoryNotFound,
-    ContentRepositoryPermissionDenied
+    ContentRepositoryPermissionDenied,
+    ContentRepositoryFailDetail
 )
 from taskhub.middlewares.exceptions.enterprise.enterprise_exception_handler import (
     EnterpriseAlreadyExists,
