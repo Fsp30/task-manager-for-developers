@@ -30,7 +30,7 @@ class ContentRepositoryFailDetail(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
     default_detail = "Falha ao obter detalhes do Content Repository"
     default_code = "detail_content_repository_failed"
-    app_code = AppCode.CONTENT_REPOSITORY_LIST_FAILED 
+    app_code = AppCode.CONTENT_REPOSITORY_DETAIL_FAILED 
 
 class ContentRepositoryFailUpdate(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
