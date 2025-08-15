@@ -8,6 +8,7 @@ from taskhub.core.services.user_service import get_user
 from taskhub.core.services.enterprise_service import get_enterprise
 from taskhub.core.services.repository_permission_service import create_repository_permission
 from taskhub.core.services.repository_permission_service import add_dev_permission
+from taskhub.core.services.content_repository_service import create_content_repository
 from taskhub.middlewares.exceptions import (
     RepositoryNotFound, 
     RepositoryFailList, 
@@ -36,44 +37,58 @@ def create_repository(
     enterprise_id: Optional[str] = None,
     admin_users: Optional[List[str]] = None
 ) -> Repository:
-    
+
     try:
+        
         get_repository(repository_id)
         raise RepositoryAlreadyExists(f"Repository with ID '{repository_id}' already exists")
     except RepositoryNotFound:
-        pass
+        pass  
     
     try:
-        creator_user = get_user(git_creator_id)  
+        creator_user = get_user(git_creator_id)
         enterprise_ref = get_enterprise(enterprise_id) if enterprise_id else None
-        
-
-        content = ContentRepository(content_Id=str(uuid.uuid4()))
-        content.save()
-        
-        permission = create_repository_permission(repository_id, git_creator_id)
         
         repository = Repository(
             repository_id=repository_id,
             creator_Id=creator_user,
-            content_Id=content,
-            admin_repository=permission,
             enterpriseId=enterprise_ref,
             created_at=datetime.datetime.utcnow()
         )
-        
         repository.save()
+        
+        permission = create_repository_permission(repository_id, git_creator_id)
+
+        content = create_content_repository(
+            repository=repository,  
+            git_creator_id=git_creator_id
+        )
+        
+        repository.admin_repository = permission
+        repository.content_Id = content
+        repository.save()
+        
         if admin_users:
             for user_id in admin_users:
-                add_dev_permission(permission.repositoryPermissionId, git_creator_id, user_id)
+                try:
+                    add_dev_permission(permission.repositoryPermissionId, git_creator_id, user_id)
+                except Exception as e:
+                    print(f"Warning: Failed to add admin user {user_id}: {str(e)}")
         
         return repository
+        
     except UserNotFound:
+        if 'repository' in locals():
+            repository.delete()
         raise
-    except RepositoryNotFound:
-        raise
-
     except Exception as e:
+        if 'repository' in locals():
+            repository.delete()
+        if 'content' in locals() and content:
+            content.delete()
+        if 'permission' in locals() and permission:
+            permission.delete()
+            
         raise RepositoryFailCreate(f"Failed to create repository: {str(e)}") from e
 
 def list_admin_users(repository_id: str) -> List[User]:
