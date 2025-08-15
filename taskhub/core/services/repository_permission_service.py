@@ -1,6 +1,7 @@
 from typing import Optional, List
 import uuid
 from taskhub.core.models import RepositoryPermission
+from taskhub.core.models import Repository
 from taskhub.core.models import User
 from taskhub.core.services.user_service import get_user
 from taskhub.core.services.repository_service import get_repository
@@ -18,34 +19,36 @@ from taskhub.middlewares.exceptions import (
 
 )
 
-def get_permission_repository(git_user_id: str, repository_permission_id: str) -> RepositoryPermission:
-  
+def get_permission_repository(repository_id: str, git_user_id:str) -> RepositoryPermission:
     try:
         user = get_user(git_user_id)
-        permission = RepositoryPermission.objects( repositoryPermissionId=repository_permission_id).first()  
-
-        if not permission:
-            raise RepositoryPermissionNotFound(f"Permission with ID{repository_permission_id} not found" )
+        repository = Repository.objects(repository_id=repository_id).first()
+        
+        if not repository:
+            raise RepositoryNotFound(f"Repository with ID {repository_id} not found")
+ 
+        if not repository.admin_repository:
+            raise RepositoryPermissionNotFound(f"No permission found for repository {repository_id}")
+            
+        permission = repository.admin_repository
 
         if user not in permission.admin_users:
             raise UserPermissionDenied(
-                f"User {git_user_id} not permission to access repository"
+                f"User {git_user_id} has no permission to access repository {repository_id}"
             )
         
         return permission
         
     except UserNotFound:
         raise
-    except RepositoryPermissionNotFound:
-        raise
-    except UserPermissionDenied:
-        raise
+    except RepositoryNotFound:
+        raise RepositoryPermissionNotFound(f"Repository {repository_id} not found")
     except Exception as e:
-        raise RepositoryPermissionFailDetail(f"failed search permission: {str(e)}") from e  
+        raise RepositoryPermissionFailDetail(f"Failed to get repository permission: {str(e)}") from e
 
-def get_all_devs(repository_permission_id:str) -> List[User]:
+def get_all_devs(repository_permission_id:str, git_user_id:str) -> List[User]:
     try:
-        permission = get_permission_repository(repository_permission_id)
+        permission = get_permission_repository(git_user_id,repository_permission_id)
         return list(permission.admin_users) if permission.admin_users else []
     
     except RepositoryPermissionNotFound:
@@ -83,7 +86,7 @@ def create_repository_permission(repository_id: str,  git_creator_id: str) -> Re
 
 def add_dev_permission(repository_permission_id: str, git_admin_id: str, git_new_user_id: str) -> List[User]:
     try:
-        permission = get_permission_repository(repository_permission_id)
+        permission = get_permission_repository(repository_permission_id, git_admin_id)
         admin_user = get_user(git_admin_id)
         new_user = get_user(git_new_user_id)
         
@@ -115,7 +118,7 @@ def remove_dev_permission(repository_permission_id: str, git_admin_id: str, git_
                 raise InvalidRepositoryAccess(f"User {git_admin_id} is not authorized to add permissions" )
             
             if user_to_remove not in permission.admin_users:
-                raise UserNotFound("User '{git_remove_user_id}' not found in permission list with ID '{repository_permission_id}'")
+                raise UserNotFound(f"User '{git_remove_user_id}' not found in permission list with ID '{repository_permission_id}'")
             
             permission.admin_users.remove(user_to_remove)
             permission.save()
