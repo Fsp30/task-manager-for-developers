@@ -15,7 +15,10 @@ from taskhub.middlewares.exceptions import (
         RepositoryPermissionNotFound, 
         ContentRepositoryAlreadyExists,
         RepositoryNotFound,
-        ContentRepositoryFailCreate
+        ContentRepositoryFailCreate,
+        RepositoryPermissionFailDelete,
+        ContentRepositoryFailDelete
+
 
 )
 
@@ -65,7 +68,7 @@ def create_content_repository(
         content = ContentRepository(
             repositoryId=repository,
             contentId=content_id,
-            admin_users=permission,  # Referência à permissão do repositório
+            admin_users=permission,  
             working_tag=working_tag,
             chat_id=chat_id,
             content_type=content_type,
@@ -80,3 +83,31 @@ def create_content_repository(
         raise
     except Exception as e:
         raise ContentRepositoryFailCreate(f"Failed to create content repository: {str(e)}") from e
+
+
+def delete_content_repository(repository_id: str, git_creator_id: str) -> bool:
+    try:
+        repository = get_repository(repository_id)
+        content_repository = ContentRepository.objects(content_Id=str(repository.content_Id)).first()
+        
+        if not content_repository:
+            raise ContentRepositoryNotFound(f"Content Repository with ID {repository.content_Id} not found")
+        
+        if str(repository.creator_Id.id) != git_creator_id:
+            raise RepositoryPermissionFailDelete(
+                f"User '{git_creator_id}' not authorized to delete repository '{repository_id}'"
+            )
+
+        content_repository.delete()
+        return True
+        
+    except RepositoryNotFound:
+        raise
+    except ContentRepositoryNotFound:
+        raise
+    except RepositoryPermissionFailDelete:
+        raise
+    except Exception as e:
+        raise ContentRepositoryFailDelete(
+            f"Failed to delete content Repository with ID '{content_repository.content_Id}': {str(e)}"
+        ) from e
