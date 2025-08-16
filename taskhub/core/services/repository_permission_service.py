@@ -15,7 +15,9 @@ from taskhub.middlewares.exceptions import (
         RepositoryPermissionFailRemoveUser,
         RepositoryPermissionFailCreate,
         InvalidRepositoryAccess,
-        RepositoryNotFound
+        RepositoryNotFound,
+        RepositoryPermissionFailDelete
+
 
 )
 
@@ -134,6 +136,29 @@ def remove_dev_permission(repository_permission_id: str, git_admin_id: str, git_
         except Exception as e:
                 raise RepositoryPermissionFailRemoveUser(f"Failed to remove user '{git_remove_user_id}' to repository permissions: {str(e)}") from e
 
+def delete_permission_repository(repository_id: str, git_creator_id: str) -> bool:
+    try:
+        repository = get_repository(repository_id)
+        if str(repository.creator_Id.id) != git_creator_id:
+            raise InvalidRepositoryAccess(
+                f"Exclusive permission: Only the creator can delete permissions for repository '{repository_id}'"
+            )
+
+        permission = RepositoryPermission.objects(admin_repository=repository).first()
+        if not permission:
+            raise RepositoryPermissionNotFound(f"No permissions found for repository '{repository_id}'")
+
+        permission.delete()
+        return True
+
+    except RepositoryNotFound:
+        raise
+    except InvalidRepositoryAccess:
+        raise
+    except RepositoryPermissionNotFound:
+        raise
+    except Exception as e:
+        raise RepositoryPermissionFailDelete(f"Failed to delete permissions for repository '{repository_id}': {str(e)}") from e
 
 
         
