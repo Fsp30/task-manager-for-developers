@@ -3,7 +3,7 @@ from mongoengine import Document, StringField, DateTimeField, DictField, Referen
 
 class ContentRepository(Document):
     repositoryId = ReferenceField('Repository')
-    contentId = StringField(required=True)
+    contentId = StringField(required=True, unique=True)
     admin_users = ReferenceField('RepositoryPermission')
     working_tag = StringField()
     created_at = DateTimeField(default=datetime.datetime.utcnow)
