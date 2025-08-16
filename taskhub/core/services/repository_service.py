@@ -8,7 +8,9 @@ from taskhub.core.services.user_service import get_user
 from taskhub.core.services.enterprise_service import get_enterprise
 from taskhub.core.services.repository_permission_service import create_repository_permission
 from taskhub.core.services.repository_permission_service import add_dev_permission
+from taskhub.core.services.repository_permission_service import delete_permission_repository
 from taskhub.core.services.content_repository_service import create_content_repository
+from taskhub.core.services.content_repository_service import delete_content_repository
 from taskhub.middlewares.exceptions import (
     RepositoryNotFound, 
     RepositoryFailList, 
@@ -18,6 +20,7 @@ from taskhub.middlewares.exceptions import (
     RepositoryPermissionFailList,
     RepositoryPermissionFailDelete,
     UserNotFound,
+    ContentRepositoryFailDelete
         
 )
 
@@ -121,10 +124,15 @@ def delete_repository(repository_id: str, git_creator_id: str) -> bool:
             raise RepositoryPermissionFailDelete(
                 f"User '{git_creator_id}' not authorized to delete repository '{repository_id}'"
             )
+        
+        delete_content_repository(repository_id, git_creator_id)
+        delete_permission_repository(repository_id, git_creator_id)
         repository.delete()
         return True
         
     except RepositoryNotFound:
+        raise
+    except ContentRepositoryFailDelete:
         raise
     except RepositoryPermissionFailDelete:
         raise
