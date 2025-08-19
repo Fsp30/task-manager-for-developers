@@ -1,4 +1,4 @@
-from taskhub.middlewares.exceptions.base_exception_handler import custom_exception_handler
+from taskhub.middlewares.exceptions.base_exception_handler import custom_exception_handler, InputExceededCharacterLimit
 
 from taskhub.middlewares.exceptions.user.user_exception_handler import (
     UserAlreadyExists,
@@ -16,7 +16,8 @@ from taskhub.middlewares.exceptions.task.task_exception_handler import (
     TaskFailList,
     TaskFailUpdate,
     TaskNotFound,
-    TaskPermissionDenied
+    TaskPermissionDenied,
+    TaskFailDetail
 )
 from taskhub.middlewares.exceptions.repository_permission.repository_permission_exception_handler import (
     RepositoryPermissionAlreadyExists,

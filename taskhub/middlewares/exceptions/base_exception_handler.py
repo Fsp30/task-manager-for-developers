@@ -39,3 +39,10 @@ class ExternalAPIError(CustomAppException):
     default_detail = "Erro ao comunicar com serviço externo."
     default_code = "external_api_error"
     app_code = AppCode.AUTH_GITHUB_CALLBACK_ERROR
+
+    
+class InputExceededCharacterLimit(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Valor de input excede o permitido"
+    default_code = "length_input_max_invalid"
+    app_code = AppCode.INPUT_EXCEEDED_CHARACTER_LIMIT
