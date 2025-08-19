@@ -30,7 +30,7 @@ class TaskFailDetail(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
     default_detail = "Falha ao obter detalhes da task"
     default_code = "task_detail_failed"
-    app_code = AppCode.TASK_LIST_FAILED  
+    app_code = AppCode.TASK_DETAIL_FAILED  
 
 class TaskFailUpdate(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
