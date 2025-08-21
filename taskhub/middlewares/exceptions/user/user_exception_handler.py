@@ -30,7 +30,7 @@ class UserFailDetail(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
     default_detail = "Falha ao obter detalhes do usuário"
     default_code = "user_detail_failed"
-    app_code = AppCode.USER_LIST_FAILED  
+    app_code = AppCode.USER_DETAIL_FAILED  
 
 class UserFailUpdate(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST

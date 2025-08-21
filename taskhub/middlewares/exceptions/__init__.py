@@ -7,7 +7,8 @@ from taskhub.middlewares.exceptions.user.user_exception_handler import (
     UserFailList,
     UserFailUpdate,
     UserNotFound,
-    UserPermissionDenied
+    UserPermissionDenied,
+    UserFailDetail
 )
 from taskhub.middlewares.exceptions.task.task_exception_handler import (
     TaskAlreadyExists,
