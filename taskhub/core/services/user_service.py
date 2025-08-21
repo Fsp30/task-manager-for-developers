@@ -14,7 +14,8 @@ from taskhub.middlewares.exceptions import (
         UserPermissionDenied, 
         RepositoryFailList, 
         InputExceededCharacterLimit,
-        InvalidEmailFormat
+        InvalidEmailFormat,
+        RepositoryPermissionFailList
 )
 
 
@@ -103,9 +104,9 @@ def update_user(git_id:str,user_email:Optional[str] = None ,user_name:Optional[s
                 raise UserFailUpdate(f"Failed to update user {git_id}: {str(e)}") from e
         
 
-def delete_user(gitId: str) -> bool:
+def delete_user(git_id: str) -> bool:
     try:
-        user = get_user(gitId)
+        user = get_user(git_id)
         user.delete()
         return True
     except UserNotFound:
@@ -114,15 +115,15 @@ def delete_user(gitId: str) -> bool:
         raise UserFailDelete(f"failed delete: {str(e)}") from e
         
 
-def get_my_permissions(gitId: str) -> List[RepositoryPermission]:
-    if not User.objects(gitId=gitId).first(): 
-        raise UserNotFound(f"User {gitId} not found")
+def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
     
     try:
-        permissions = RepositoryPermission.objects(repositoryPermissionId=gitId).all() 
-        return List(permissions)  
+        user = get_user(git_id)
+        return list(user.repository_permissions) if user.repository_permissions else []
+    except UserNotFound:
+        raise
     except Exception as e:
-        raise UserPermissionDenied(f"Permission denied or error occurred: {str(e)}") from e
+        raise RepositoryPermissionFailList(f"Failed list permissions for user {git_id}: {str(e)}") from e
                 
 
 
