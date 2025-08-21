@@ -46,3 +46,9 @@ class InputExceededCharacterLimit(CustomAppException):
     default_detail = "Valor de input excede o permitido"
     default_code = "length_input_max_invalid"
     app_code = AppCode.INPUT_EXCEEDED_CHARACTER_LIMIT
+
+class InvalidEmailFormat(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao adicionar email "
+    default_code = "verification_email_no_match"
+    app_code = AppCode.USER_INVALID_EMAIL
