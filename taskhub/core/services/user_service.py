@@ -74,21 +74,33 @@ def list_my_repositories(git_id:str) -> List[Repository]:
                raise RepositoryFailList(f"Failed list repositories for user {git_id}; {str(e)}") from e
         
 
-def update_user(gitId:str,email:str = None ,userName:str = None):
-        try:
-                user = get_user(gitId)
-                if email:
-                        user.email = email
-                if userName:
-                        user.userName = userName
-                
+def update_user(git_id:str,user_email:Optional[str] = None ,user_name:Optional[str] = None) -> User:
+        try:    
+                if user_email is None and user_name is None:
+                        raise ValueError("At least one update field must be provided")
+                user = get_user(git_id)
+                if user_email:
+                       validate_email(user_email)
+                if user_name and len(user_name)>100:
+                       raise  InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(user_name)} characters")
 
-                user.save()
+                update_fields = {}
+
+                if user_email and not (user_email==str(user.email)): 
+                       user.email = user_email
+                       update_fields['email'] = user_email
+                if user_name:
+                        user.userName = user_name
+                        update_fields['user_name'] = user_name
+
+                if update_fields:
+                       user.save()
+
                 return user
-        except UserNotFound:
+        except (UserNotFound, InvalidEmailFormat, InputExceededCharacterLimit):
                 raise
         except Exception as e:
-                raise UserFailUpdate(f"failed update: {str(e)}") from e
+                raise UserFailUpdate(f"Failed to update user {git_id}: {str(e)}") from e
         
 
 def delete_user(gitId: str) -> bool:
