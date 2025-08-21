@@ -1,7 +1,6 @@
 import uuid, datetime
 from typing import Optional, List
 from taskhub.core.models import Repository
-from taskhub.core.models import ContentRepository
 from taskhub.core.models import RepositoryPermission
 from taskhub.core.models import User
 from taskhub.core.services.user_service import get_user
