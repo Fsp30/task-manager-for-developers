@@ -44,8 +44,32 @@ class TaskFailDelete(CustomAppException):
     default_code = "task_deletion_failed"
     app_code = AppCode.TASK_DELETE_FAILED
 
+class TaskInvalidStatus(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Status de task invalido"
+    default_code = "task_status_invalid"
+    app_code = AppCode.TASK_INVALID_STATUS
+
+class TaskInvalidPriority(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Prioridade de task invalido"
+    default_code = "task_priority_invalid"
+    app_code = AppCode.TASK_INVALID_PRIORITY
+
 class TaskPermissionDenied(CustomAppException):
     status_code = ErrorsAppStatus.FORBIDDEN
     default_detail = "Permissão negada para acessar a task"
     default_code = "task_permission_denied"
-    app_code = AppCode.TASK_LIST_FAILED 
+    app_code = AppCode.TASK_INVALID_CREDENTIALS 
+
+class TaskFailAddedUser(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao adicionar user da task"
+    default_code = "add_user_to_task_failed"
+    app_code = AppCode.USER_ADDED_TASK_FAILED
+
+class TaskFailRemoveUser(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Falha ao remover user da task"
+    default_code = "remove_user_to_task_failed"
+    app_code = AppCode.USER_REMOVE_TASK_FAILED
