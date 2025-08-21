@@ -29,7 +29,7 @@ class Note(ContentRepository):
 
 class Task(ContentRepository):
     taskId = StringField(required=True, unique=True)
-    link_content_id = ReferenceField('ContentRepository')  # Relação direta
+    link_content_id = ReferenceField('ContentRepository') 
     title = StringField(required=True, max_length=120)
     author = ReferenceField('User')
     resolvers = ListField(ReferenceField('User'))
