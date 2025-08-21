@@ -17,7 +17,11 @@ from taskhub.middlewares.exceptions.task.task_exception_handler import (
     TaskFailUpdate,
     TaskNotFound,
     TaskPermissionDenied,
-    TaskFailDetail
+    TaskFailDetail,
+    TaskInvalidStatus,
+    TaskInvalidPriority,
+    TaskFailAddedUser,
+    TaskFailRemoveUser
 )
 from taskhub.middlewares.exceptions.repository_permission.repository_permission_exception_handler import (
     RepositoryPermissionAlreadyExists,
