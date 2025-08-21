@@ -30,53 +30,48 @@ def get_user(git_id:str) -> User:
                 raise UserFailDetail(f"Failed detail user ID {git_id}: {str(e)}") from e
 
 def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -> User:
-    try:
-        existing_user = User.objects(gitId=git_id).first()
-        if existing_user:
-            raise UserAlreadyExists(f"User with GitHub ID '{git_id}' already exists")
-        
-        existing_email = User.objects(email=user_email).first()
-        if existing_email:
-              raise UserAlreadyExists(f"User with email '{user_email}' already exists")
+        try:
+                existing_user = User.objects(gitId=git_id).first()
+                if existing_user:
+                        raise UserAlreadyExists(f"User with GitHub ID '{git_id}' already exists")
 
-        validate_email(user_email)  
+                existing_email = User.objects(email=user_email).first()
+                if existing_email:
+                        raise UserAlreadyExists(f"User with email '{user_email}' already exists")
 
-        _user_name = user_name or git_id
-        
-        if len(_user_name) > 100:
-            raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(_user_name)} characters" )
-        
-        new_user = User(
-            gitId=git_id,
-            email=user_email,
-            userName=_user_name,
-            created_at=datetime.datetime.utcnow(),
-            updated_at=datetime.datetime.utcnow()  
-        )
-        
-        new_user.save()
-        return new_user
-        
-    except (UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
-        # Re-raise expected exceptions
-        raise
-    except Exception as e:
-        raise UserFailCreate(
-            f"Failed to create user with GitHub ID '{git_id}': {str(e)}"
-        ) from e
+                validate_email(user_email)  
+
+                _user_name = user_name or git_id
+
+                if len(_user_name) > 100:
+                        raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(_user_name)} characters" )
+
+                new_user = User(
+                        gitId=git_id,
+                        email=user_email,
+                        userName=_user_name,
+                        created_at=datetime.datetime.utcnow(),
+                        updated_at=datetime.datetime.utcnow()  
+                )
+
+                new_user.save()
+                return new_user
+
+        except (UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
+                raise
+        except Exception as e:
+                raise UserFailCreate( f"Failed to create user with GitHub ID '{git_id}': {str(e)}") from e
 
                 
 
-def list_my_repository(gitId:str) -> List[Repository]:
-        if not User.objects(gitId=gitId).first():
-                raise UserNotFound(f"failed search repository's: {str(gitId)}") 
-        
-        try:                
-                repository = Repository.objects(creator_Id=gitId).all()
-                return List(repository)
-
+def list_my_repositories(git_id:str) -> List[Repository]:
+        try:
+                user = get_user(git_id)
+                return list(user.repositories) if user.repositories else []
+        except UserNotFound:
+               raise
         except Exception as e:
-                raise RepositoryFailList() from e
+               raise RepositoryFailList(f"Failed list repositories for user {git_id}; {str(e)}") from e
         
 
 def update_user(gitId:str,email:str = None ,userName:str = None):
