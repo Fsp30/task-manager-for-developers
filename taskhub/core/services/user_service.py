@@ -1,40 +1,71 @@
-from typing import List
+import datetime
+from typing import List, Optional
 from taskhub.core.models import User
 from taskhub.core.models import Repository
 from taskhub.core.models import RepositoryPermission
+from taskhub.utils.validation_email import validate_email
 from taskhub.middlewares.exceptions import (
-        UserAlreadyExists,UserFailCreate,UserFailDelete,UserFailList,UserFailUpdate,UserNotFound,UserPermissionDenied, RepositoryFailList, 
+        UserAlreadyExists,
+        UserFailDetail,
+        UserFailCreate,
+        UserFailDelete,
+        UserFailUpdate,
+        UserNotFound,
+        UserPermissionDenied, 
+        RepositoryFailList, 
+        InputExceededCharacterLimit,
+        InvalidEmailFormat
 )
 
 
-def get_user(gitId:str):
+def get_user(git_id:str) -> User:
         try:
-                user = User.objects(gitId=gitId).first()
+                user = User.objects(gitId=git_id).first()
                 if not user:
-                        raise UserNotFound()        
+                        raise UserNotFound(f"User with ID: {git_id} not found")        
                 return user
-        except Exception as e:
-                raise UserFailList(f"failed: {str(e)}") from e
-
-def create_user(gitId:str, email:str, userName:str):
-        get_user(gitId)
-        try:
-                raise UserAlreadyExists(f"User with gitId '{gitId}' already exists")
         except UserNotFound:
-                pass 
-        
-        
-        userName = userName or gitId 
-        try:
-                created_user = User(
-                        gitId=gitId,
-                        email=email,
-                        userName=userName
-                )
-                created_user.save()
-                return created_user
+               raise
         except Exception as e:
-                raise UserFailCreate() from e 
+                raise UserFailDetail(f"Failed detail user ID {git_id}: {str(e)}") from e
+
+def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -> User:
+    try:
+        existing_user = User.objects(gitId=git_id).first()
+        if existing_user:
+            raise UserAlreadyExists(f"User with GitHub ID '{git_id}' already exists")
+        
+        existing_email = User.objects(email=user_email).first()
+        if existing_email:
+              raise UserAlreadyExists(f"User with email '{user_email}' already exists")
+
+        validate_email(user_email)  
+
+        _user_name = user_name or git_id
+        
+        if len(_user_name) > 100:
+            raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(_user_name)} characters" )
+        
+        new_user = User(
+            gitId=git_id,
+            email=user_email,
+            userName=_user_name,
+            created_at=datetime.datetime.utcnow(),
+            updated_at=datetime.datetime.utcnow()  
+        )
+        
+        new_user.save()
+        return new_user
+        
+    except (UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
+        # Re-raise expected exceptions
+        raise
+    except Exception as e:
+        raise UserFailCreate(
+            f"Failed to create user with GitHub ID '{git_id}': {str(e)}"
+        ) from e
+
+                
 
 def list_my_repository(gitId:str) -> List[Repository]:
         if not User.objects(gitId=gitId).first():
