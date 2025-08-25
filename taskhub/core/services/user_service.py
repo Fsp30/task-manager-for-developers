@@ -1,3 +1,4 @@
+from datetime import UTC
 import datetime
 from typing import List, Optional
 from taskhub.core.models import User
@@ -51,8 +52,8 @@ def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -
                         gitId=git_id,
                         email=user_email,
                         userName=_user_name,
-                        created_at=datetime.datetime.utcnow(),
-                        updated_at=datetime.datetime.utcnow()  
+                        created_at=datetime.datetime.now(UTC),
+                        updated_at=datetime.datetime.now(UTC)  
                 )
 
                 new_user.save()
