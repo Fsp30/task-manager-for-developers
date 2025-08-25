@@ -5,7 +5,7 @@ from pathlib import Path
 env = environ.Env(DEBUG=(bool, True))
 BASE_DIR = Path(__file__).resolve().parent.parent
 env.read_env(BASE_DIR / 'config' / 'environments' /'.env')
-SET_DIR =Path(__file__).resolve().parent.parent. parent
+SET_DIR =Path(__file__).resolve().parent.parent.parent
 
 
 
@@ -114,7 +114,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-DEBUG = env('DEBUG')
 
 SECRET_KEY = env('SECRET_KEY')
 GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID')
