@@ -11,5 +11,6 @@ def mongo_connect():
     connect(
         db=env('MONGO_DB_NAME'),
         host=env('MONGO_URI'),
+        uuidRepresentation='standard',
         tls=True
     )
