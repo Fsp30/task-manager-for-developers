@@ -9,7 +9,6 @@ from taskhub.middlewares.exceptions.user.user_exception_handler import (
     UserNotFound,
     UserPermissionDenied,
     UserFailDetail,
-    UserInvalidEmail
 )
 from taskhub.middlewares.exceptions.task.task_exception_handler import (
     TaskAlreadyExists,
@@ -44,7 +43,7 @@ from taskhub.middlewares.exceptions.repository.repository_exception_handler impo
     RepositoryFailList,
     RepositoryFailUpdate,
     RepositoryNotFound,
-    RepositoryPermissionDenied
+
 )
 from taskhub.middlewares.exceptions.note.note_exception_handler import (
     NoteAlreadyExists,
@@ -84,5 +83,4 @@ from taskhub.middlewares.exceptions.chat.chat_exception_handler import (
     ChatFailList,
     ChatFailUpdate,
     ChatNotFound,
-    ChatPermissionDenied
 )
