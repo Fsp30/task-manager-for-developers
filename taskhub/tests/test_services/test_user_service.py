@@ -19,3 +19,16 @@ class TestUserService:
         assert user.gitId == "test123"
         assert user.email == "test@email.com"
     
+    
+    @patch('taskhub.core.services.user_service.User.objects')
+    def test_create_user_without_userName_success(self, mock_objects):
+        """Test successful user without creation"""
+        mock_objects.return_value.first.return_value = None
+        
+        from taskhub.core.services.user_service import create_user
+        user = create_user("test123", "test@email.com")
+        
+        assert user.gitId == "test123"
+        assert user.email == "test@email.com"
+    
+    
