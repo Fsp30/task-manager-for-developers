@@ -175,6 +175,7 @@ class AppCode:
 
 
     INPUT_EXCEEDED_CHARACTER_LIMIT = 9000
+    INPUT_EMPTY_OR_NONE = 9001
 
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,

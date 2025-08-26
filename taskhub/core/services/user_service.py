@@ -16,7 +16,8 @@ from taskhub.middlewares.exceptions import (
         RepositoryFailList, 
         InputExceededCharacterLimit,
         InvalidEmailFormat,
-        RepositoryPermissionFailList
+        RepositoryPermissionFailList,
+        InputEmptyOrNone
 )
 
 
@@ -33,6 +34,12 @@ def get_user(git_id:str) -> User:
 
 def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -> User:
         try:
+                if not git_id or not git_id.strip():
+                       raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
+                
+                if not user_email:
+                       raise InputEmptyOrNone(f"Value input email cannot be empty or None")
+
                 existing_user = User.objects(gitId=git_id).first()
                 if existing_user:
                         raise UserAlreadyExists(f"User with GitHub ID '{git_id}' already exists")
@@ -59,7 +66,7 @@ def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -
                 new_user.save()
                 return new_user
 
-        except (UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
+        except (InputEmptyOrNone,UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
                 raise
         except Exception as e:
                 raise UserFailCreate( f"Failed to create user with GitHub ID '{git_id}': {str(e)}") from e

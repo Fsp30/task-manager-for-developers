@@ -47,6 +47,12 @@ class InputExceededCharacterLimit(CustomAppException):
     default_code = "length_input_max_invalid"
     app_code = AppCode.INPUT_EXCEEDED_CHARACTER_LIMIT
 
+class InputEmptyOrNone(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Valor de input não pode ser vazio"
+    default_code = "input_empty"
+    app_code = AppCode.INPUT_EMPTY_OR_NONE
+
 class InvalidEmailFormat(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
     default_detail = "Falha ao adicionar email "
