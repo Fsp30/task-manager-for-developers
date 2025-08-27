@@ -40,7 +40,15 @@ class TestCreateUserService:
                 assert user.userName == "789"
                 assert user.email == "withoutName@example.com"
 
-                
+        def test_create_user_duplicate_email(self, default_user):
+                with pytest.raises(UserAlreadyExists):
+                        create_user("user2", "filipe@example.com", "User Two")
+
+
+
+
+
+
 
 
     
