@@ -4,7 +4,7 @@ from typing import List, Optional
 from taskhub.core.models import User
 from taskhub.core.models import Repository
 from taskhub.core.models import RepositoryPermission
-from taskhub.utils.validation_email import validate_email
+from taskhub.utils import Validations
 from taskhub.middlewares.exceptions import (
         UserAlreadyExists,
         UserFailDetail,
@@ -12,7 +12,6 @@ from taskhub.middlewares.exceptions import (
         UserFailDelete,
         UserFailUpdate,
         UserNotFound,
-        UserPermissionDenied, 
         RepositoryFailList, 
         InputExceededCharacterLimit,
         InvalidEmailFormat,
@@ -20,7 +19,7 @@ from taskhub.middlewares.exceptions import (
         InputEmptyOrNone
 )
 
-class UserSevice:
+class UserService:
         def get_user(git_id:str) -> User:
                 try:
                         if not git_id or not git_id.strip():
@@ -50,7 +49,7 @@ class UserSevice:
                         if existing_email:
                                 raise UserAlreadyExists(f"User with email '{user_email}' already exists")
 
-                        validate_email(user_email)  
+                        Validations.validate_email(user_email)  
 
                         _user_name = user_name or git_id
 
@@ -75,7 +74,7 @@ class UserSevice:
 
         def list_my_repositories(git_id:str) -> List[Repository]:
                 try:
-                        user = UserSevice.get_user(git_id)  
+                        user = UserService.get_user(git_id)  
                         return list(user.repositories) if user.repositories else []
                 except UserNotFound:
                         raise
@@ -88,9 +87,9 @@ class UserSevice:
                         if user_email is None and user_name is None:
                                 raise ValueError("At least one update field must be provided")
                         
-                        user = UserSevice.get_user(git_id) 
+                        user = UserService.get_user(git_id) 
                         if user_email:
-                                validate_email(user_email)
+                                Validations.validate_email(user_email)
                         if user_name and len(user_name) > 100: 
                                 raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(user_name)} characters")
 
@@ -115,7 +114,7 @@ class UserSevice:
 
         def delete_user(git_id: str) -> bool:
                 try:
-                        user = UserSevice.get_user(git_id)  
+                        user = UserService.get_user(git_id)  
                         user.delete()
                         return True
                 except UserNotFound:  
@@ -126,7 +125,7 @@ class UserSevice:
 
         def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
                 try: 
-                        user = UserSevice.get_user(git_id)
+                        user = UserService.get_user(git_id)
                         return list(user.repository_permissions) if user.repository_permissions else []
                 except UserNotFound: 
                         raise
