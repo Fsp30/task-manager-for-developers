@@ -1,5 +1,6 @@
 from typing import Optional, List
-import uuid
+import uuid, datetime
+from datetime import UTC
 from taskhub.core.models import( 
     RepositoryPermission,
     Repository,
@@ -74,7 +75,9 @@ class PermissionsService:
             permission = RepositoryPermission(
                 repositoryPermissionId=str(uuid.uuid4()),
                 admin_users=[user], 
-                admin_repository=repository
+                admin_repository=repository,
+                created_at=datetime.datetime.now(UTC),
+                updated_at=datetime.datetime.now(UTC)  
             )
             permission.save()
             
