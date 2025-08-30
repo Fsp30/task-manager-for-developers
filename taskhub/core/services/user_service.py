@@ -74,12 +74,14 @@ class UserService:
 
         def list_my_repositories(git_id:str) -> List[Repository]:
                 try:
+                        if not git_id or not git_id.strip():
+                                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
                         user = UserService.get_user(git_id)  
                         return list(user.repositories) if user.repositories else []
-                except UserNotFound:
+                except (InputEmptyOrNone,UserNotFound):
                         raise
                 except Exception as e:
-                        raise RepositoryFailList(f"Failed list repositories for user {git_id}; {str(e)}") from e
+                        raise RepositoryFailList(f"Failed list repositories for user '{git_id}'; {str(e)}") from e
                 
 
         def update_user(git_id:str, user_email:Optional[str] = None, user_name:Optional[str] = None) -> User:
@@ -125,9 +127,11 @@ class UserService:
 
         def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
                 try: 
+                        if not git_id or not git_id.strip():
+                                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
                         user = UserService.get_user(git_id)
                         return list(user.repository_permissions) if user.repository_permissions else []
-                except UserNotFound: 
+                except (InputEmptyOrNone,UserNotFound): 
                         raise
                 except Exception as e:  
-                        raise RepositoryPermissionFailList(f"Failed list permissions for user {git_id}: {str(e)}") from e
+                        raise RepositoryPermissionFailList(f"Failed list permissions for user '{git_id}': {str(e)}") from e
