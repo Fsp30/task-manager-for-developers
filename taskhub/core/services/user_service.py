@@ -84,6 +84,18 @@ class UserService:
                         raise RepositoryFailList(f"Failed list repositories for user '{git_id}'; {str(e)}") from e
                 
 
+        def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
+                try: 
+                        if not git_id or not git_id.strip():
+                                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
+                        user = UserService.get_user(git_id)
+                        return list(user.repository_permissions) if user.repository_permissions else []
+                except (InputEmptyOrNone,UserNotFound): 
+                        raise
+                except Exception as e:  
+                        raise RepositoryPermissionFailList(f"Failed list permissions for user '{git_id}': {str(e)}") from e
+                
+
         def update_user(git_id:str, user_email:Optional[str] = None, user_name:Optional[str] = None) -> User:
                 try:    
                         if user_email is None and user_name is None:
@@ -116,22 +128,12 @@ class UserService:
 
         def delete_user(git_id: str) -> bool:
                 try:
+                        if not git_id or not git_id.strip():
+                                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
                         user = UserService.get_user(git_id)  
                         user.delete()
                         return True
-                except UserNotFound:  
+                except (InputEmptyOrNone,UserNotFound):  
                         raise
                 except Exception as e: 
-                        raise UserFailDelete(f"failed delete: {str(e)}") from e
-                
-
-        def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
-                try: 
-                        if not git_id or not git_id.strip():
-                                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
-                        user = UserService.get_user(git_id)
-                        return list(user.repository_permissions) if user.repository_permissions else []
-                except (InputEmptyOrNone,UserNotFound): 
-                        raise
-                except Exception as e:  
-                        raise RepositoryPermissionFailList(f"Failed list permissions for user '{git_id}': {str(e)}") from e
+                        raise UserFailDelete(f"Failed delete user with ID '{git_id}': {str(e)}") from e
