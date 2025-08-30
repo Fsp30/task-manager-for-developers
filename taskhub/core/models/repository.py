@@ -1,4 +1,5 @@
 import datetime
+from datetime import UTC
 from mongoengine import Document, StringField, DateTimeField, ReferenceField
 
 class Repository(Document):
@@ -6,7 +7,7 @@ class Repository(Document):
     admin_repository = ReferenceField('RepositoryPermission')
     creator_Id = ReferenceField('User', required=True)
     enterpriseId = ReferenceField('Enterprise')
-    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    created_at = DateTimeField(default=lambda: datetime.datetime.now(datetime.UTC))
     content_Id = ReferenceField('ContentRepository')
 
     meta = {
@@ -17,3 +18,7 @@ class Repository(Document):
             'enterpriseId'
         ]
     }
+    def save(self, *args, **kwargs) -> None:
+       
+        self.updated_at = datetime.datetime.now(datetime.UTC)
+        super().save(*args, **kwargs)
