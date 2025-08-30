@@ -1,7 +1,8 @@
 import pytest
 import mongomock
 import fakeredis
-from taskhub.core.services.user_service import create_user
+from taskhub.core.services.user_service import UserService
+from taskhub.core.services.repository_service import RepositoryService
 from mongoengine import connect, disconnect, get_db
 
 @pytest.fixture(scope="session", autouse=True)
@@ -34,8 +35,26 @@ def redis_client(monkeypatch, fake_redis):
     return fake_redis
 
 
-
 @pytest.fixture
-def default_user():
-    user = create_user("123", "filipe@example.com", "Filipe")
-    return user
+def default_repository_list():
+    from taskhub.core.models import Repository, User
+    from datetime import datetime, UTC
+    
+    user = UserService.create_user("123", "test@example.com")
+    
+    Repository.objects(creator_Id=user).delete()
+
+    
+    repositories = []
+    for i in range(5):
+        repo = Repository(
+            repository_id=f"repo-{i}",
+            creator_Id=user,
+        )
+        repo.save()
+        repositories.append(repo)
+
+    user.repositories = repositories
+    user.save()
+    
+    return repositories
