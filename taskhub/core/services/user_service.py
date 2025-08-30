@@ -20,119 +20,115 @@ from taskhub.middlewares.exceptions import (
         InputEmptyOrNone
 )
 
+class UserSevice:
+        def get_user(git_id:str) -> User:
+                try:
+                        if not git_id or not git_id.strip():
+                               raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
+                        user = User.objects(gitId=git_id).first()
+                        if not user:
+                                raise UserNotFound(f"User with ID: {git_id} not found")        
+                        return user
+                except (InputEmptyOrNone ,UserNotFound):
+                        raise
+                except Exception as e:
+                        raise UserFailDetail(f"Failed detail user ID '{git_id}': {str(e)}") from e
 
-def get_user(git_id:str) -> User:
-        try:
-                user = User.objects(gitId=git_id).first()
-                if not user:
-                        raise UserNotFound(f"User with ID: {git_id} not found")        
-                return user
-        except UserNotFound:
-               raise
-        except Exception as e:
-                raise UserFailDetail(f"Failed detail user ID {git_id}: {str(e)}") from e
+        def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -> User:
+                try:
+                        if not git_id or not git_id.strip():
+                                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
+                        
+                        if not user_email:
+                                raise InputEmptyOrNone(f"Value input email cannot be empty or None")
 
-def create_user(git_id: str, user_email: str, user_name: Optional[str] = None) -> User:
-        try:
-                if not git_id or not git_id.strip():
-                       raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
-                
-                if not user_email:
-                       raise InputEmptyOrNone(f"Value input email cannot be empty or None")
+                        existing_user = User.objects(gitId=git_id).first()
+                        if existing_user:
+                                raise UserAlreadyExists(f"User with GitHub ID '{git_id}' already exists")
 
-                existing_user = User.objects(gitId=git_id).first()
-                if existing_user:
-                        raise UserAlreadyExists(f"User with GitHub ID '{git_id}' already exists")
+                        existing_email = User.objects(email=user_email).first()
+                        if existing_email:
+                                raise UserAlreadyExists(f"User with email '{user_email}' already exists")
 
-                existing_email = User.objects(email=user_email).first()
-                if existing_email:
-                        raise UserAlreadyExists(f"User with email '{user_email}' already exists")
+                        validate_email(user_email)  
 
-                validate_email(user_email)  
+                        _user_name = user_name or git_id
 
-                _user_name = user_name or git_id
+                        if len(_user_name) > 100:
+                                raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(_user_name)} characters" )
 
-                if len(_user_name) > 100:
-                        raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(_user_name)} characters" )
+                        new_user = User(
+                                gitId=git_id,
+                                email=user_email,
+                                userName=_user_name,
+                                created_at=datetime.datetime.now(UTC),
+                                updated_at=datetime.datetime.now(UTC)  
+                        )
 
-                new_user = User(
-                        gitId=git_id,
-                        email=user_email,
-                        userName=_user_name,
-                        created_at=datetime.datetime.now(UTC),
-                        updated_at=datetime.datetime.now(UTC)  
-                )
+                        new_user.save()
+                        return new_user
 
-                new_user.save()
-                return new_user
+                except (InputEmptyOrNone,UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
+                        raise
+                except Exception as e:
+                        raise UserFailCreate( f"Failed to create user with GitHub ID '{git_id}': {str(e)}") from e
 
-        except (InputEmptyOrNone,UserAlreadyExists, InvalidEmailFormat, InputExceededCharacterLimit):
-                raise
-        except Exception as e:
-                raise UserFailCreate( f"Failed to create user with GitHub ID '{git_id}': {str(e)}") from e
-
-                
-
-def list_my_repositories(git_id:str) -> List[Repository]:
-        try:
-                user = get_user(git_id)
-                return list(user.repositories) if user.repositories else []
-        except UserNotFound:
-               raise
-        except Exception as e:
-               raise RepositoryFailList(f"Failed list repositories for user {git_id}; {str(e)}") from e
-        
-
-def update_user(git_id:str,user_email:Optional[str] = None ,user_name:Optional[str] = None) -> User:
-        try:    
-                if user_email is None and user_name is None:
-                        raise ValueError("At least one update field must be provided")
-                user = get_user(git_id)
-                if user_email:
-                       validate_email(user_email)
-                if user_name and len(user_name)>100:
-                       raise  InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(user_name)} characters")
-
-                update_fields = {}
-
-                if user_email and not (user_email==str(user.email)): 
-                       user.email = user_email
-                       update_fields['email'] = user_email
-                if user_name:
-                        user.userName = user_name
-                        update_fields['user_name'] = user_name
-
-                if update_fields:
-                       user.save()
-
-                return user
-        except (UserNotFound, InvalidEmailFormat, InputExceededCharacterLimit):
-                raise
-        except Exception as e:
-                raise UserFailUpdate(f"Failed to update user {git_id}: {str(e)}") from e
-        
-
-def delete_user(git_id: str) -> bool:
-    try:
-        user = get_user(git_id)
-        user.delete()
-        return True
-    except UserNotFound:
-        raise
-    except Exception as e:
-        raise UserFailDelete(f"failed delete: {str(e)}") from e
-        
-
-def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
-    
-    try:
-        user = get_user(git_id)
-        return list(user.repository_permissions) if user.repository_permissions else []
-    except UserNotFound:
-        raise
-    except Exception as e:
-        raise RepositoryPermissionFailList(f"Failed list permissions for user {git_id}: {str(e)}") from e
+        def list_my_repositories(git_id:str) -> List[Repository]:
+                try:
+                        user = UserSevice.get_user(git_id)  
+                        return list(user.repositories) if user.repositories else []
+                except UserNotFound:
+                        raise
+                except Exception as e:
+                        raise RepositoryFailList(f"Failed list repositories for user {git_id}; {str(e)}") from e
                 
 
+        def update_user(git_id:str, user_email:Optional[str] = None, user_name:Optional[str] = None) -> User:
+                try:    
+                        if user_email is None and user_name is None:
+                                raise ValueError("At least one update field must be provided")
+                        
+                        user = UserSevice.get_user(git_id) 
+                        if user_email:
+                                validate_email(user_email)
+                        if user_name and len(user_name) > 100: 
+                                raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(user_name)} characters")
 
+                        update_fields = {}
 
+                        if user_email and not (user_email == str(user.email)):  
+                                user.email = user_email
+                                update_fields['email'] = user_email
+                        if user_name: 
+                                user.userName = user_name
+                                update_fields['user_name'] = user_name
+
+                        if update_fields:  
+                                user.save()
+
+                        return user
+                except (UserNotFound, InvalidEmailFormat, InputExceededCharacterLimit):
+                        raise
+                except Exception as e:
+                        raise UserFailUpdate(f"Failed to update user {git_id}: {str(e)}") from e
+                
+
+        def delete_user(git_id: str) -> bool:
+                try:
+                        user = UserSevice.get_user(git_id)  
+                        user.delete()
+                        return True
+                except UserNotFound:  
+                        raise
+                except Exception as e: 
+                        raise UserFailDelete(f"failed delete: {str(e)}") from e
+                
+
+        def get_my_permissions(git_id: str) -> List[RepositoryPermission]:
+                try: 
+                        user = UserSevice.get_user(git_id)
+                        return list(user.repository_permissions) if user.repository_permissions else []
+                except UserNotFound: 
+                        raise
+                except Exception as e:  
+                        raise RepositoryPermissionFailList(f"Failed list permissions for user {git_id}: {str(e)}") from e
