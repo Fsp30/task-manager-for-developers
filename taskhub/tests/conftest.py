@@ -3,6 +3,8 @@ import mongomock
 import fakeredis
 from taskhub.core.services.user_service import UserService
 from taskhub.core.services.repository_service import RepositoryService
+from taskhub.core.models import User, Repository, RepositoryPermission
+from datetime import datetime, UTC
 from mongoengine import connect, disconnect, get_db
 
 @pytest.fixture(scope="session", autouse=True)
@@ -36,14 +38,16 @@ def redis_client(monkeypatch, fake_redis):
 
 
 @pytest.fixture
+def default_user():
+    user = UserService.create_user("123", "filipe@example.com", "Filipe")
+    return user
+
+@pytest.fixture
 def default_repository_list():
-    from taskhub.core.models import Repository, User
-    from datetime import datetime, UTC
     
     user = UserService.create_user("123", "test@example.com")
     
     Repository.objects(creator_Id=user).delete()
-
     
     repositories = []
     for i in range(5):
@@ -58,3 +62,35 @@ def default_repository_list():
     user.save()
     
     return repositories
+
+
+
+@pytest.fixture
+def default_repository_permissions():
+  
+    user = UserService.create_user("123", "test@example.com")
+    RepositoryPermission.objects(admin_users=user).delete()
+
+    repositories = []
+    for i in range(3):
+        repo = Repository(
+            repository_id=f"repo-{i}",
+            creator_Id=user,
+        )
+        repo.save()
+        repositories.append(repo)
+
+    permissions = []
+    for i, repo in enumerate(repositories):
+        perm = RepositoryPermission(
+            repositoryPermissionId=f"perm-{i}",
+            admin_repository=repo,
+            admin_users=[user],
+        )
+        perm.save()
+        permissions.append(perm)
+
+    user.repository_permissions = permissions
+    user.save()
+
+    return permissions
