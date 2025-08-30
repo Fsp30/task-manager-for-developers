@@ -1,7 +1,7 @@
 import uuid, datetime
 from typing import List, Optional
 from taskhub.core.models import Task, ContentRepository,Repository,RepositoryPermission
-from taskhub.core.services import UserService
+from taskhub.core.services.user_service import UserService
 from taskhub.middlewares.exceptions import (
         TaskFailCreate,
         TaskFailDelete,

@@ -1,10 +1,13 @@
 from typing import Optional, List
 import uuid
-from taskhub.core.models import RepositoryPermission
-from taskhub.core.models import Repository
-from taskhub.core.models import User
+from taskhub.core.models import( 
+    RepositoryPermission,
+    Repository,
+    User
+)
 from taskhub.core.services.user_service import UserService
 from taskhub.core.services.repository_service import RepositoryService
+
 from taskhub.middlewares.exceptions import (
         UserPermissionDenied,
         UserNotFound,

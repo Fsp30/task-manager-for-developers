@@ -1,17 +1,13 @@
 import uuid
 import datetime
 from typing import Optional, List
-from taskhub.core.models import(
+from taskhub.core.models import (
     Repository,
     User,
     RepositoryPermission
 )
-from taskhub.core.services import (
-    UserService,
-    PermissionsService,
-    ContentRepositoryService
-)
-from taskhub.core.services.enterprise_service import get_enterprise 
+from taskhub.core.services.user_service import UserService
+
 from taskhub.middlewares.exceptions import (
     RepositoryNotFound, 
     RepositoryFailList, 
@@ -50,7 +46,9 @@ class RepositoryService:
         
         try:
             creator_user = UserService.get_user(git_creator_id)
-            enterprise_ref = get_enterprise(enterprise_id) if enterprise_id else None
+            
+            from taskhub.core.services.enterprise_service import EnterpriseService
+            enterprise_ref = EnterpriseService.get_enterprise(enterprise_id) if enterprise_id else None
             
             repository = Repository(
                 repository_id=repository_id,
@@ -60,8 +58,10 @@ class RepositoryService:
             )
             repository.save()
             
+            from taskhub.core.services.repository_permission_service import PermissionsService
             permission = PermissionsService.create_repository_permission(repository_id, git_creator_id)
 
+            from taskhub.core.services.content_repository_service import ContentRepositoryService
             content = ContentRepositoryService.create_content_repository(
                 repository=repository,  
                 git_creator_id=git_creator_id
@@ -121,8 +121,13 @@ class RepositoryService:
                     f"User '{git_creator_id}' not authorized to delete repository '{repository_id}'"
                 )
             
+       
+            from taskhub.core.services.content_repository_service import ContentRepositoryService
             ContentRepositoryService.delete_content_repository(repository_id, git_creator_id)
+            
+            from taskhub.core.services.repository_permission_service import PermissionsService
             PermissionsService.delete_permission_repository(repository_id, git_creator_id)
+            
             repository.delete()
             return True
             

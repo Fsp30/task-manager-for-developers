@@ -3,7 +3,7 @@ from typing import Optional, List
 from taskhub.core.models import Enterprise
 from taskhub.core.models import User
 from taskhub.core.models import Repository
-from taskhub.core.services import UserService
+from taskhub.core.services.user_service import UserService
 from taskhub.middlewares.exceptions import (
         RepositoryFailList,
         RepositoryNotFound,
