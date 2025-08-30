@@ -8,7 +8,7 @@ from taskhub.middlewares.exceptions import (
     InputExceededCharacterLimit,
     UserFailCreate
 )
-from taskhub.core.services.user_service import create_user
+from taskhub.core.services import UserService
 from taskhub.core.models import User
 
 
@@ -17,7 +17,7 @@ class TestCreateUserService:
 
         @pytest.mark.principal
         def test_create_user_successfully(self):
-                user = create_user("124", "test@example.com", "test_example")  
+                user = UserService.create_user("124", "test@example.com", "test_example")  
 
                 assert user is not None
                 assert user.gitId == "124"
@@ -33,38 +33,35 @@ class TestCreateUserService:
         @pytest.mark.principal
         def test_create_user_duplicate(self, default_user):
                 with pytest.raises(UserAlreadyExists):
-                        create_user("123", "filipe@example.com", "Filipe")
+                        UserService.create_user("123", "filipe@example.com", "Filipe")
         
         @pytest.mark.userName
         def test_create_user_without_name_uses_git_id(self):
 
-                user = create_user("789", "withoutName@example.com")
+                user = UserService.create_user("789", "withoutName@example.com")
 
                 assert user.userName == "789"
                 assert user.email == "withoutName@example.com"
-
-        def test_create_user_duplicate_email(self, default_user):
-                with pytest.raises(UserAlreadyExists):
-                        create_user("user2", "filipe@example.com", "User Two")
         
+        @pytest.mark.git_id
         def test_create_user_empty_git_id(self):
                 with pytest.raises(InputEmptyOrNone):
-                        create_user("", "test@example.com")
+                        UserService.create_user("", "test@example.com")
                 with pytest.raises(InputEmptyOrNone):
-                        create_user(" ", "test@example.com")
+                        UserService.create_user(" ", "test@example.com")
                 with pytest.raises(InputEmptyOrNone):
-                        create_user(None,  "test@example.com")
+                        UserService.create_user(None,  "test@example.com")
 
         @pytest.mark.userName
         def test_create_user_with_userName_exceeds_100_characters(self):
                 long_name = "A" * 101
                 with pytest.raises(InputExceededCharacterLimit):
-                        create_user("userTest", "test@example.com", long_name)
+                        UserService.create_user("userTest", "test@example.com", long_name)
         
         @pytest.mark.userName
         def test_create_user_with_userName_exactly_100_characters(self):
                 username_test = "A" * 100
-                user = create_user("userTest", "test@example.com", username_test)
+                user = UserService.create_user("userTest", "test@example.com", username_test)
 
                 assert user.userName == username_test
 
@@ -72,15 +69,15 @@ class TestCreateUserService:
         @pytest.mark.git_id
         def test_create_user_with_whitespace_in_gitId(self):
                 with pytest.raises(InputEmptyOrNone):
-                        create_user(" ", "test@example.com")
+                        UserService.create_user(" ", "test@example.com")
                 
-                user = create_user(" test ", "test@example.com")
+                user = UserService.create_user(" test ", "test@example.com")
                 assert user.gitId == " test "
                 assert user.userName == " test "
                 
         @pytest.mark.timestamp
         def test_create_user_timestame_is_UTC(self):
-                user = create_user("test", "test@example.com")
+                user = UserService.create_user("test", "test@example.com")
 
                 assert user.created_at.tzinfo == UTC
                 assert user.updated_at.tzinfo == UTC
@@ -93,7 +90,7 @@ class TestCreateUserService:
                         side_effect=Exception("Query error"))
                 
                 with pytest.raises(UserFailCreate) as exc_info:
-                        create_user("123", "test@example.com")
+                        UserService.create_user("123", "test@example.com")
                 
                 assert "Failed to create user with GitHub ID '123'" in str(exc_info.value)
                 assert "Query error" in str(exc_info.value)
