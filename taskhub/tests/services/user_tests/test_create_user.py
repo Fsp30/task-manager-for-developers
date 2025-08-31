@@ -34,7 +34,7 @@ class TestCreateUserService:
         def test_create_user_duplicate(self, default_user):
                 with pytest.raises(UserAlreadyExists):
                         UserService.create_user("123", "filipe@example.com", "Filipe")
-        
+
         @pytest.mark.userName
         def test_create_user_without_name_uses_git_id(self):
 
@@ -42,6 +42,15 @@ class TestCreateUserService:
 
                 assert user.userName == "789"
                 assert user.email == "withoutName@example.com"
+        
+        @pytest.mark.email
+        def test_create_user_without_email(self):
+                with pytest.raises(InputEmptyOrNone):
+                        UserService.create_user("123", "")
+                with pytest.raises(InputEmptyOrNone):
+                        UserService.create_user("123", " ")
+                with pytest.raises(InputEmptyOrNone):
+                        UserService.create_user("123", None)
         
         @pytest.mark.git_id
         def test_create_user_empty_git_id(self):
