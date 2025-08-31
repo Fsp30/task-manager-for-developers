@@ -38,7 +38,7 @@ class UserService:
                         if not git_id or not git_id.strip():
                                 raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
                         
-                        if not user_email:
+                        if not user_email or not user_email.strip():
                                 raise InputEmptyOrNone(f"Value input email cannot be empty or None")
 
                         existing_user = User.objects(gitId=git_id).first()
@@ -96,34 +96,37 @@ class UserService:
                         raise RepositoryPermissionFailList(f"Failed list permissions for user '{git_id}': {str(e)}") from e
                 
 
-        def update_user(git_id:str, user_email:Optional[str] = None, user_name:Optional[str] = None) -> User:
-                try:    
-                        if user_email is None and user_name is None:
-                                raise ValueError("At least one update field must be provided")
+        def update_user(git_id: str, user_email:Optional[str] = None, user_name:Optional[str] = None):
+                try:
+                        if not user_email and not user_name:
+                                raise InputEmptyOrNone("At least one of user_email or user_name must be provided")
                         
-                        user = UserService.get_user(git_id) 
-                        if user_email:
-                                Validations.validate_email(user_email)
-                        if user_name and len(user_name) > 100: 
-                                raise InputExceededCharacterLimit(f"User name must be 100 characters or less. Provided: {len(user_name)} characters")
+                        user = UserService.get_user(git_id)
+
+                        if user_name and len(user_name) > 100:
+                                raise InputExceededCharacterLimit(f"User name must be 100 characters or less (got {len(user_name)})")
 
                         update_fields = {}
-
-                        if user_email and not (user_email == str(user.email)):  
+                
+                        if user_email and user_email != str(user.email):
+                                Validations.validate_email(user_email)
                                 user.email = user_email
-                                update_fields['email'] = user_email
-                        if user_name: 
-                                user.userName = user_name
-                                update_fields['user_name'] = user_name
+                                update_fields["email"] = user_email
 
-                        if update_fields:  
+                        
+                        if user_name and user_name != str(user.userName):
+                                user.userName = user_name
+                                update_fields["user_name"] = user_name
+
+                        if update_fields:
                                 user.save()
 
                         return user
-                except (UserNotFound, InvalidEmailFormat, InputExceededCharacterLimit):
+
+                except (InputEmptyOrNone,UserNotFound, InvalidEmailFormat, InputExceededCharacterLimit):
                         raise
                 except Exception as e:
-                        raise UserFailUpdate(f"Failed to update user {git_id}: {str(e)}") from e
+                        raise UserFailUpdate(f"Failed update user with ID '{git_id}': {str(e)}") from e
                 
 
         def delete_user(git_id: str) -> bool:
