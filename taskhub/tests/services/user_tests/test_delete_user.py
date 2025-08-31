@@ -33,7 +33,7 @@ class TestDeleteUsers:
                         UserService.delete_user("test_delete_not_found")
 
         @pytest.mark.fails
-        def test_get_all_permissions_unexpected_exception_during_query(self, mocker):
+        def test_delete_user_unexpected_exception_during_query(self, mocker):
                 mocker.patch('taskhub.core.services.user_service.User.objects', 
                 side_effect=Exception("Query error"))
                 
