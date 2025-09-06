@@ -1,5 +1,6 @@
 import uuid
 import datetime
+from datetime import UTC
 from typing import Optional, List
 from taskhub.core.models import (
     Repository,
@@ -17,19 +18,27 @@ from taskhub.middlewares.exceptions import (
     RepositoryPermissionFailList,
     RepositoryPermissionFailDelete,
     UserNotFound,
-    ContentRepositoryFailDelete
+    ContentRepositoryFailDelete,
+    RepositoryFailDetail,
+    EnterpriseNotFound,
+    RepositoryPermissionNotFound,
+    InputEmptyOrNone
 )
 
 class RepositoryService:
     
     def get_repository(repository_id: str) -> Repository:
         try:
+            if not repository_id or not repository_id.strip():
+                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
             repository = Repository.objects(repository_id=repository_id).first()  
-            if not repository:
+            if repository == None:
                 raise RepositoryNotFound(f"Repository with ID '{repository_id}' not found")
             return repository
+        except (InputEmptyOrNone, RepositoryNotFound):
+            raise
         except Exception as e:
-            raise RepositoryFailList(f"Failed to get repository: {str(e)}") from e
+            raise RepositoryFailDetail(f"Failed detail repository ID '{repository_id}': {str(e)}") from e
 
     def create_repository(
         repository_id: str,
@@ -39,12 +48,10 @@ class RepositoryService:
     ) -> Repository:
 
         try:
-            RepositoryService.get_repository(repository_id)
-            raise RepositoryAlreadyExists(f"Repository with ID '{repository_id}' already exists")
-        except RepositoryNotFound:
-            pass  
-        
-        try:
+            repo = Repository.objects(repository_id=repository_id).first()
+            if repo:
+                raise RepositoryAlreadyExists(f"Repository ID '{repository_id} already exists'")
+       
             creator_user = UserService.get_user(git_creator_id)
             
             from taskhub.core.services.enterprise_service import EnterpriseService
@@ -52,9 +59,9 @@ class RepositoryService:
             
             repository = Repository(
                 repository_id=repository_id,
-                creator_Id=creator_user,
+                creator_Id=creator_user.gitId,
                 enterpriseId=enterprise_ref,
-                created_at=datetime.datetime.utcnow()
+                created_at=datetime.datetime.now(UTC),
             )
             repository.save()
             
@@ -80,35 +87,28 @@ class RepositoryService:
             
             return repository
             
-        except UserNotFound:
-            if 'repository' in locals():
-                repository.delete()
+        except (RepositoryAlreadyExists, UserNotFound, EnterpriseNotFound):
             raise
-        except Exception as e:
-            if 'repository' in locals():
-                repository.delete()
-            if 'content' in locals() and content:
-                content.delete()
-            if 'permission' in locals() and permission:
-                permission.delete()
-                
-            raise RepositoryFailCreate(f"Failed to create repository: {str(e)}") from e
+        except Exception as e: 
+            raise RepositoryFailCreate(f"Failed to create repository ID '{repository_id}': {str(e)}") from e
 
     def list_admin_users(repository_id: str) -> List[User]:
         try:
+            if not repository_id or not repository_id.strip():
+                raise InputEmptyOrNone(f"Value input Github ID cannot be empty or None")
+            
             repository = RepositoryService.get_repository(repository_id)
-        except RepositoryNotFound:
-            raise
-        
-        try:
+
             permission = RepositoryPermission.objects(admin_repository=repository).first()
             if not permission or not permission.admin_users:
                 return []
                 
-            return list(permission.admin_users)          
+            return list(permission.admin_users)
+        except (InputEmptyOrNone,RepositoryNotFound, RepositoryPermissionNotFound):
+            raise         
         except Exception as e:
             raise RepositoryPermissionFailList(
-                f"Failed to list admin users for repository {repository_id}: {str(e)}"
+                f"Failed to list admin users for repository '{repository_id}': {str(e)}"
             ) from e
     
     def delete_repository(repository_id: str, git_creator_id: str) -> bool:
