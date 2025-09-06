@@ -30,7 +30,7 @@ class RepositoryFailDetail(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
     default_detail = "Falha ao obter detalhes do repositório"
     default_code = "detail_repository_failed"
-    app_code = AppCode.REPOSITORY_LIST_FAILED 
+    app_code = AppCode.REPOSITORY_DETAIL_FAILED
 
 class RepositoryFailUpdate(CustomAppException):
     status_code = ErrorsAppStatus.BAD_REQUEST
