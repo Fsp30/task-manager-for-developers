@@ -114,6 +114,8 @@ class RepositoryService:
     def delete_repository(repository_id: str, git_creator_id: str) -> bool:
         
         try:
+            if not repository_id or repository_id.strip() or not git_creator_id or git_creator_id.strip():
+                raise InputEmptyOrNone("Both fields must be completed")
             repository = RepositoryService.get_repository(repository_id)
             
             if str(repository.creator_Id.gitId) != git_creator_id:
