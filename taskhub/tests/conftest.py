@@ -1,9 +1,12 @@
 import pytest
+import uuid
 import mongomock
 import fakeredis
 from taskhub.core.services.user_service import UserService
 from taskhub.core.services.repository_service import RepositoryService
-from taskhub.core.models import User, Repository, RepositoryPermission
+from taskhub.core.services.enterprise_service import EnterpriseService
+from taskhub.core.services.repository_permission_service import PermissionsService
+from taskhub.core.models import User, Repository, RepositoryPermission, Enterprise
 from datetime import datetime, UTC
 from mongoengine import connect, disconnect, get_db
 
@@ -94,3 +97,48 @@ def default_repository_permissions():
     user.save()
 
     return permissions
+
+@pytest.fixture
+def default_repository():
+    creator = User(
+        gitId="creator123",
+        email="creator@example.com",
+        userName="Creator User"
+    )
+    creator.save()
+
+    admins = []
+    for i in range(3):
+        admin = User(
+            gitId=f"admin{i}",
+            email=f"admin{i}@example.com",
+            userName=f"Admin {i}"
+        )
+        admin.save()
+        admins.append(admin)
+
+    enterprise = Enterprise(
+        owner_Id=creator,
+        enterpriseId="enterprise123",
+        nameEnterprise="Test Enterprise"
+    )
+    enterprise.save()
+
+    repository = Repository(
+        repository_id="test_repo_id",
+        creator_Id=creator,
+        enterpriseId=enterprise
+    )
+    repository.save()
+
+    permissions = RepositoryPermission(
+        repositoryPermissionId="perm_repo_id",
+        admin_repository=repository, 
+        admin_users=[creator] + admins
+    )
+    permissions.save()
+
+    repository.admin_repository = permissions
+    repository.save()
+
+    return repository
