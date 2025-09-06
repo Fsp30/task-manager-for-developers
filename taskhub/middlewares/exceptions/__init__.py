@@ -43,6 +43,7 @@ from taskhub.middlewares.exceptions.repository.repository_exception_handler impo
     RepositoryFailList,
     RepositoryFailUpdate,
     RepositoryNotFound,
+    RepositoryFailDetail
 
 )
 from taskhub.middlewares.exceptions.note.note_exception_handler import (
