@@ -7,7 +7,8 @@ class Repository(Document):
     admin_repository = ReferenceField('RepositoryPermission')
     creator_Id = ReferenceField('User', required=True)
     enterpriseId = ReferenceField('Enterprise')
-    created_at = DateTimeField(default=lambda: datetime.datetime.now(datetime.UTC))
+    created_at = DateTimeField(default=lambda: datetime.datetime.now(UTC))
+    updated_at = DateTimeField(default=lambda: datetime.datetime.now(UTC))
     content_Id = ReferenceField('ContentRepository')
 
     meta = {
@@ -18,7 +19,7 @@ class Repository(Document):
             'enterpriseId'
         ]
     }
+
     def save(self, *args, **kwargs) -> None:
-       
-        self.updated_at = datetime.datetime.now(datetime.UTC)
+        self.updated_at = datetime.datetime.now(UTC)
         super().save(*args, **kwargs)
