@@ -11,7 +11,7 @@ from taskhub.core.services.user_service import UserService
 
 from taskhub.middlewares.exceptions import (
     RepositoryNotFound, 
-    RepositoryFailList, 
+    RepositoryChangeDenied,
     RepositoryAlreadyExists,
     RepositoryFailCreate,
     RepositoryFailDelete,
@@ -23,6 +23,7 @@ from taskhub.middlewares.exceptions import (
     EnterpriseNotFound,
     RepositoryPermissionNotFound,
     InputEmptyOrNone
+    
 )
 
 class RepositoryService:
@@ -114,12 +115,12 @@ class RepositoryService:
     def delete_repository(repository_id: str, git_creator_id: str) -> bool:
         
         try:
-            if not repository_id or repository_id.strip() or not git_creator_id or git_creator_id.strip():
+            if not repository_id or not repository_id.strip() or not git_creator_id or not git_creator_id.strip():
                 raise InputEmptyOrNone("Both fields must be completed")
             repository = RepositoryService.get_repository(repository_id)
             
             if str(repository.creator_Id.gitId) != git_creator_id:
-                raise RepositoryPermissionFailDelete(
+                raise RepositoryChangeDenied(
                     f"User '{git_creator_id}' not authorized to delete repository '{repository_id}'"
                 )
             
@@ -132,12 +133,8 @@ class RepositoryService:
             
             repository.delete()
             return True
-            
-        except RepositoryNotFound:
-            raise
-        except ContentRepositoryFailDelete:
-            raise
-        except RepositoryPermissionFailDelete:
+      
+        except (InputEmptyOrNone,RepositoryNotFound,RepositoryChangeDenied, ContentRepositoryFailDelete,RepositoryPermissionFailDelete):
             raise
         except Exception as e:
             raise RepositoryFailDelete(
