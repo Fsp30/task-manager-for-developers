@@ -44,3 +44,9 @@ class RepositoryFailDelete(CustomAppException):
     default_code = "delete_repository_failed"
     app_code = AppCode.REPOSITORY_DELETE_FAILED
 
+class RepositoryChangeDenied(CustomAppException):
+    status_code = ErrorsAppStatus.FORBIDDEN
+    default_detail = "Você não tem permissião para tal ação no repositório"
+    default_code = "repository_change_denied"
+    app_code = AppCode.REPOSITORY_CHANGE_DENIED
+
