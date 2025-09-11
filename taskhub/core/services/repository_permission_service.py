@@ -20,37 +20,30 @@ from taskhub.middlewares.exceptions import (
         RepositoryPermissionFailCreate,
         InvalidRepositoryAccess,
         RepositoryNotFound,
-        RepositoryPermissionFailDelete
+        RepositoryPermissionFailDelete,
+        InputEmptyOrNone
 
 
 )
 class PermissionsService:
-    def get_permission_repository(repository_id: str, git_user_id:str) -> RepositoryPermission:
+    def get_permission_repository(repository: 'Repository', git_user:'User') -> RepositoryPermission:
         try:
-            user = UserService.get_user(git_user_id)
-            repository = Repository.objects(repository_id=repository_id).first()
-            
-            if not repository:
-                raise RepositoryNotFound(f"Repository with ID {repository_id} not found")
-    
             if not repository.admin_repository:
-                raise RepositoryPermissionNotFound(f"No permission found for repository {repository_id}")
-                
-            permission = repository.admin_repository
+                raise RepositoryPermissionNotFound(f"Not permission found for repository {repository.repository_id}")
+            
+            permissions = repository.admin_repository
 
-            if user not in permission.admin_users:
+            if git_user not in permissions.admin_users:
                 raise UserPermissionDenied(
-                    f"User {git_user_id} has no permission to access repository {repository_id}"
+                    f"User {git_user.gitId} has no permission to access repository {repository.repository_id}"
                 )
             
-            return permission
+            return permissions
             
-        except UserNotFound:
+        except (RepositoryNotFound, UserPermissionDenied):
             raise
-        except RepositoryNotFound:
-            raise RepositoryPermissionNotFound(f"Repository {repository_id} not found")
         except Exception as e:
-            raise RepositoryPermissionFailDetail(f"Failed to get repository permission: {str(e)}") from e
+            raise RepositoryPermissionFailDetail(f"Failed to get repository permission : {str(e)}") from e
 
     def get_all_devs(repository_permission_id:str, git_user_id:str) -> List[User]:
         try:
@@ -63,58 +56,47 @@ class PermissionsService:
             raise UserFailList(f"Failed to list developers for permission {repository_permission_id}: {str(e)}") from e
 
 
-    def create_repository_permission(repository_id: str,  git_creator_id: str) -> RepositoryPermission:
-
+    def create_repository_permission(repository: 'Repository', creator_repo: 'User') -> RepositoryPermission:
         try:
-            user = UserService.get_user(git_creator_id)
-            repository = RepositoryService.get_repository(repository_id)  
+            if repository.creator_Id != creator_repo:
+                raise InvalidRepositoryAccess(f"User {creator_repo.gitId} is not the repository creator")
 
-            if str(repository.creator_Id) != git_creator_id:
-                raise InvalidRepositoryAccess(f"User {git_creator_id} is not the repository creator")
-    
             permission = RepositoryPermission(
                 repositoryPermissionId=str(uuid.uuid4()),
-                admin_users=[user], 
                 admin_repository=repository,
+                admin_users=[creator_repo], 
                 created_at=datetime.datetime.now(UTC),
                 updated_at=datetime.datetime.now(UTC)  
             )
+            
             permission.save()
             
             return permission
-            
-        except UserNotFound:
-            raise
-        except RepositoryNotFound:
-            raise
+        
         except InvalidRepositoryAccess:
             raise
         except Exception as e:
             raise RepositoryPermissionFailCreate(f"Failed to create repository permission: {str(e)}") from e
 
-    def add_dev_permission(repository_permission_id: str, git_admin_id: str, git_new_user_id: str) -> List[User]:
+
+    def add_dev_permission(repository_permission: 'RepositoryPermission', git_admin: 'User', new_admin: 'User') -> List[User]:
         try:
-            permission = PermissionsService.get_permission_repository(repository_permission_id, git_admin_id)
-            admin_user = UserService.get_user(git_admin_id)
-            new_user = UserService.get_user(git_new_user_id)
+            if not (git_admin or not getattr(git_admin, "gitId", None) or not git_admin.gitId.strip()) or not (new_admin or not getattr(new_admin, "gitId", None) or not new_admin.gitId.strip()):
+                raise InputEmptyOrNone("Repository creator must be provided and have a valid gitId")
             
-            if admin_user not in permission.admin_users:
-                raise InvalidRepositoryAccess(f"User {git_admin_id} is not authorized to add permissions" )
+            if git_admin not in repository_permission.admin_users:
+                raise InvalidRepositoryAccess(f"User {git_admin.gitId} is not authorized to add permissions" )
+            if new_admin not in repository_permission.admin_users:
+                repository_permission.admin_users.append(new_admin)
             
-            if new_user not in permission.admin_users:
-                permission.admin_users.append(new_user)
-                permission.save()
-            
-            return list(permission.admin_users)
-            
-        except RepositoryPermissionNotFound:
-            raise
-        except UserNotFound:
-            raise
+            repository_permission.save()
+            return list(repository_permission.admin_users)
         except InvalidRepositoryAccess:
             raise
         except Exception as e:
-            raise RepositoryPermissionFailAddedUser(f"Failed to add user '{git_new_user_id}' to repository permissions: {str(e)}") from e
+            raise RepositoryPermissionFailAddedUser(f"Failed to add user '{new_admin.gitId}' to repository permissions: {str(e)}") from e
+        
+
         
     def remove_dev_permission(repository_permission_id: str, git_admin_id: str, git_remove_user_id: str) -> List[User]:
             try:
