@@ -142,3 +142,13 @@ def default_repository():
     repository.save()
 
     return repository
+
+@pytest.fixture
+def defautl_enterprise(default_user):
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId="enterprise123",
+        nameEnterprise="Test Enterprise"
+    )
+    enterprise.save()
+    return enterprise
