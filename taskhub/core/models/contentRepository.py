@@ -1,13 +1,14 @@
 import datetime
+from datetime import UTC
 from mongoengine import Document, StringField, DateTimeField, DictField, ReferenceField, ListField, BooleanField
 
 class ContentRepository(Document):
     repositoryId = ReferenceField('Repository')
     contentId = StringField(required=True, unique=True)
-    admin_users = ListField(ReferenceField('RepositoryPermission'))
+    admin_users = ReferenceField('RepositoryPermission')
     working_tag = StringField()
-    created_at = DateTimeField(default=datetime.datetime.utcnow)
-    updated_at = DateTimeField(default=datetime.datetime.utcnow)
+    created_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
+    updated_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
     chat_id = StringField(unique=True)
     content_type = StringField(required=True, default='content_repository')
     notes = ListField(ReferenceField('Note'))
@@ -38,8 +39,8 @@ class Task(ContentRepository):
     priority = StringField(choices=('low', 'medium', 'high'), default='medium')
     deadline = DateTimeField()
     tags = ListField(StringField(max_length=50))
-    created_task_at = DateTimeField(default=datetime.datetime.utcnow)
-    updated_task_at = DateTimeField(default=datetime.datetime.utcnow)
+    created_task_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
+    updated_task_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
     
     meta = {
         'indexes': [
@@ -54,5 +55,5 @@ class Task(ContentRepository):
     }
     
     def save(self, *args, **kwargs):
-        self.updated_task_at = datetime.datetime.utcnow()
+        self.updated_task_at = datetime.datetime.now(tz=datetime.timezone.utc)
         super().save(*args, **kwargs)

@@ -1,5 +1,5 @@
 import datetime
-from datetime import UTC
+from datetime import timezone
 from mongoengine import Document, StringField, DateTimeField, ReferenceField
 
 class Repository(Document):
@@ -7,8 +7,8 @@ class Repository(Document):
     admin_repository = ReferenceField('RepositoryPermission')
     creator_Id = ReferenceField('User', required=True)
     enterpriseId = ReferenceField('Enterprise')
-    created_at = DateTimeField(default=lambda: datetime.datetime.now(UTC))
-    updated_at = DateTimeField(default=lambda: datetime.datetime.now(UTC))
+    created_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
+    updated_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
     content_Id = ReferenceField('ContentRepository')
 
     meta = {
@@ -21,5 +21,5 @@ class Repository(Document):
     }
 
     def save(self, *args, **kwargs) -> None:
-        self.updated_at = datetime.datetime.now(UTC)
+        self.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
         super().save(*args, **kwargs)
