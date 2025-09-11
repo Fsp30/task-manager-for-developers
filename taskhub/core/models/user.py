@@ -8,8 +8,8 @@ class User(Document):
     gitId = StringField(required=True, unique=True, max_length=100)
     email = StringField(required=True, max_length=255, unique=True)  
     userName = StringField(required=True, max_length=100) 
-    created_at = DateTimeField(default=lambda: datetime.datetime.now(datetime.UTC))
-    updated_at = DateTimeField(default=lambda: datetime.datetime.now(datetime.UTC))   
+    created_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
+    updated_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))   
     repositories = ListField(ReferenceField('Repository'))
     enterprise = ReferenceField('Enterprise')
     repository_permissions = ListField(ReferenceField('RepositoryPermission'))
@@ -33,7 +33,7 @@ class User(Document):
     
     def save(self, *args, **kwargs) -> None:
        
-        self.updated_at = datetime.datetime.now(datetime.UTC)
+        self.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
         super().save(*args, **kwargs)
     
     def __str__(self) -> str:
