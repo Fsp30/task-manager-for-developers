@@ -16,17 +16,22 @@ from taskhub.middlewares.exceptions import (
         EnterpriseFailDetail,
         EnterpriseFailAddedUser,
         UserNotFound,
-        EnterpriseFailRemoveUser
+        EnterpriseFailRemoveUser,
+        InputEmptyOrNone
 )
 class EnterpriseService:
     def get_enterprise(enterprise_id:str) -> Enterprise:
-            try:
-                    enterprise = Enterprise.objects(enterpriseId=enterprise_id).first()
-                    if not enterprise:
-                            raise EnterpriseNotFound(f"Enterprise with ID '{enterprise_id}' not found")
-                    return enterprise
-            except Exception as e:
-                    raise EnterpriseFailDetail(f"Failed to get enterprise: {str(e)}") from e
+        try:    
+                if not enterprise_id or not enterprise_id.strip():
+                    raise InputEmptyOrNone(f"Value input ID cannot be empty or None")
+                enterprise = Enterprise.objects(enterpriseId=enterprise_id).first()
+                if not enterprise:
+                        raise EnterpriseNotFound(f"Enterprise with ID '{enterprise_id}' not found")
+                return enterprise
+        except (InputEmptyOrNone, EnterpriseNotFound):
+            raise
+        except Exception as e:
+                raise EnterpriseFailDetail(f"Failed detail enterprise ID '{enterprise_id}': {str(e)}") from e
             
     def create_enterprise(
             git_owner_id: str,
@@ -34,19 +39,22 @@ class EnterpriseService:
             git_enterprise_id: Optional[str] = None,
             enterprise_id: Optional[str] = None
     ) -> Enterprise:
-        if Enterprise.objects(nameEnterprise=name_enterprise).first():
-            raise EnterpriseAlreadyExists(f"Enterprise with name '{name_enterprise}' already exists")
-        
-        enterprise_id = git_enterprise_id or str(uuid.uuid4())
         try:
+            user = UserService.get_user(git_owner_id)
+            if Enterprise.objects(nameEnterprise=name_enterprise).first():
+                raise EnterpriseAlreadyExists(f"Enterprise with name '{name_enterprise}' already exists")
+            
+            enterprise_id = git_enterprise_id or str(uuid.uuid4())
             enterprise = Enterprise(
-                owner_id=git_owner_id,
+                owner_Id=user,
                 enterpriseId=enterprise_id,
                 nameEnterprise=name_enterprise,
                 gitId_enterprise=git_enterprise_id
             )
             enterprise.save()
             return enterprise
+        except (UserNotFound, EnterpriseNotFound):
+            raise
         except Exception as e:
             raise EnterpriseFailCreate(f"Failed to create Enterprise: {str(e)}") from e
 
