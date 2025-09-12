@@ -68,7 +68,6 @@ class TestToGetEnterprise:
             assert enterprise.enterpriseId == enterprise_special_chars.enterpriseId
 
 
-        @pytest.mark.now
         @pytest.mark.enterprise_id
         def test_get_enterprise_with_long_id(self, enterprise_long_id):
             enterprise = EnterpriseService.get_enterprise(enterprise_long_id.enterpriseId)
