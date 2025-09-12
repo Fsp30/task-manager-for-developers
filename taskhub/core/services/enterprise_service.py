@@ -32,6 +32,32 @@ class EnterpriseService:
             raise
         except Exception as e:
                 raise EnterpriseFailDetail(f"Failed detail enterprise ID '{enterprise_id}': {str(e)}") from e
+
+    def list_devs_enterprise(enterprise_id: str) -> List[User]:
+        try:
+            if not enterprise_id or not enterprise_id.strip():
+                raise InputEmptyOrNone(f"Value input ID cannot be empty or None")
+            
+            enterprise = EnterpriseService.get_enterprise(enterprise_id)
+            
+            return list(enterprise.devs_enterprise) if enterprise.devs_enterprise else []
+        
+        except (InputEmptyOrNone,EnterpriseNotFound):
+            raise
+        except Exception as e:
+            raise UserFailList(f"Failed to list enterprise ID: '{enterprise_id}' developers : {str(e)}") from e
+                            
+                
+
+    def list_repositories_enterprise(enterprise_id: str) -> List[Repository]:
+        try:
+            EnterpriseService.get_enterprise(enterprise_id) 
+            repositories = Repository.objects(enterpriseId=enterprise_id).all()
+            return list(repositories)
+        except (EnterpriseNotFound, RepositoryNotFound):
+            raise
+        except Exception as e:
+            raise RepositoryFailList(f"Failed to list repositories: {str(e)}") from e
             
     def create_enterprise(
             git_owner_id: str,
@@ -49,7 +75,8 @@ class EnterpriseService:
                 owner_Id=user,
                 enterpriseId=enterprise_id,
                 nameEnterprise=name_enterprise,
-                gitId_enterprise=git_enterprise_id
+                gitId_enterprise=git_enterprise_id,
+                devs_enterprise=[user]
             )
             enterprise.save()
             return enterprise
@@ -58,28 +85,6 @@ class EnterpriseService:
         except Exception as e:
             raise EnterpriseFailCreate(f"Failed to create Enterprise: {str(e)}") from e
 
-
-    def list_devs_enterprise(enterprise_id: str) -> List[User]:
-        try:
-            enterprise = EnterpriseService.get_enterprise(enterprise_id)
-            return list(enterprise.devs_enterprise) if enterprise.devs_enterprise else []
-        except EnterpriseNotFound:
-            raise
-        except Exception as e:
-            raise UserFailList(f"Failed to list devs: {str(e)}") from e
-                            
-                    
-
-
-    def list_repositories_enterprise(enterprise_id: str) -> List[Repository]:
-        try:
-            EnterpriseService.get_enterprise(enterprise_id) 
-            repositories = Repository.objects(enterpriseId=enterprise_id).all()
-            return list(repositories)
-        except (EnterpriseNotFound, RepositoryNotFound):
-            raise
-        except Exception as e:
-            raise RepositoryFailList(f"Failed to list repositories: {str(e)}") from e
 
 
     def add_dev_in_enterprise(enterprise_id: str, git_dev_id: str) -> List[User]:
