@@ -51,14 +51,20 @@ class EnterpriseService:
 
     def list_repositories_enterprise(enterprise_id: str) -> List[Repository]:
         try:
-            EnterpriseService.get_enterprise(enterprise_id) 
-            repositories = Repository.objects(enterpriseId=enterprise_id).all()
-            return list(repositories)
-        except (EnterpriseNotFound, RepositoryNotFound):
+            if not enterprise_id or not enterprise_id.strip():
+                raise InputEmptyOrNone(f"Value input ID cannot be empty or None")
+            
+            enterprise = EnterpriseService.get_enterprise(enterprise_id)
+
+            return list(enterprise.repositorys_Id) if enterprise.repositorys_Id else []
+        
+        except (InputEmptyOrNone, EnterpriseNotFound):
             raise
         except Exception as e:
-            raise RepositoryFailList(f"Failed to list repositories: {str(e)}") from e
+            raise RepositoryFailList(f"Failed to list enterprise ID '{enterprise_id}' repositories: {str(e)}") from e
             
+
+
     def create_enterprise(
             git_owner_id: str,
             name_enterprise: str,
