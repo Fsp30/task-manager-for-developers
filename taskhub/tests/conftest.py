@@ -144,11 +144,149 @@ def default_repository():
     return repository
 
 @pytest.fixture
-def defautl_enterprise(default_user):
+def default_enterprise(default_user):
     enterprise = Enterprise(
         owner_Id=default_user,
         enterpriseId="enterprise123",
-        nameEnterprise="Test Enterprise"
+        nameEnterprise="Test Enterprise",
+        devs_enterprise=[default_user]
     )
     enterprise.save()
+    yield enterprise
+
+    enterprise.delete()
+
+@pytest.fixture
+def default_enterprise_with_devs(default_user):
+    """Cria uma empresa com desenvolvedores"""
+    # Cria usuários desenvolvedores
+    devs = []
+    for i in range(2):
+        user = User(gitId=f"dev{i}", email=f"dev{i}@example.com", userName=f"Developer {i}")
+        user.save()
+        devs.append(user)
+
+    devs.append(default_user)
+
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId="enterprise_with_devs",
+        nameEnterprise="Enterprise with Devs",
+        devs_enterprise=devs 
+    )
+    enterprise.save()
+    yield enterprise
+    
+    # Cleanup
+    for user in devs:
+        user.delete()
+    enterprise.delete()
+
+@pytest.fixture
+def enterprise_with_repositories(default_user):
+
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId="enterprise_with_repos",
+        nameEnterprise="Enterprise with Repos",
+        devs_enterprise=[default_user]
+    )
+    enterprise.save()
+    
+
+    repos = []
+    for i in range(1, 3):
+        repo = Repository(
+            repository_id=f"repo_enterprise_{i}",
+            creator_Id=default_user,
+            enterpriseId=enterprise
+        )
+        repo.save()
+        enterprise.repositorys_Id.append(repo)
+        enterprise.save()   
+
+    
     return enterprise
+    
+
+@pytest.fixture
+def enterprise_special_chars(default_user):
+    """Cria empresa com ID contendo caracteres especiais"""
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId="test@enterprise_123!-special",
+        nameEnterprise="Special Chars Enterprise",
+        devs_enterprise=[default_user]
+    )
+    enterprise.save()
+    yield enterprise
+    enterprise.delete()
+
+@pytest.fixture
+def enterprise_long_id(default_user):
+    """Cria empresa com ID muito longo"""
+    long_id = "a" * 100  # ID de 100 caracteres
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId=long_id,
+        nameEnterprise="Long ID Enterprise",
+        devs_enterprise=[default_user]
+        
+    )
+    enterprise.save()
+    yield enterprise
+    enterprise.delete()
+
+@pytest.fixture
+def enterprise_many_devs(default_user):
+    """Cria empresa com muitos desenvolvedores"""
+    devs = []
+    for i in range(50):
+        user = User(gitId=f"many_devs_{i}", email=f"dev{i}@example.com", userName=f"Dev {i}")
+        user.save()
+        devs.append(user)
+    
+    devs.append(default_user)
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId="enterprise_many_devs",
+        nameEnterprise="Enterprise with Many Devs",
+        devs_enterprise=devs
+    )
+    enterprise.save()
+    yield enterprise
+    
+    # Cleanup
+    for user in devs:
+        user.delete()
+    enterprise.delete()
+
+@pytest.fixture
+def enterprise_many_repos(default_user):
+    """Cria empresa com muitos repositórios"""
+    enterprise = Enterprise(
+        owner_Id=default_user,
+        enterpriseId="enterprise_many_repos",
+        nameEnterprise="Enterprise with Many Repos"
+    )
+    enterprise.save()
+    
+    # Cria muitos repositórios
+    repos = []
+    for i in range(100):
+        repo = Repository(
+            repository_id=f"repo_many_{i}",
+            creator_Id=default_user,
+            enterpriseId=enterprise
+        )
+        repo.save()
+        repos.append(repo)
+        enterprise.repositorys_Id.append(repo)
+        enterprise.save()
+    
+    yield enterprise
+    
+    # Cleanup
+    for repo in repos:
+        repo.delete()
+    enterprise.delete()
