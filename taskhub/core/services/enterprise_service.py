@@ -6,7 +6,6 @@ from taskhub.core.models import Repository
 from taskhub.core.services.user_service import UserService
 from taskhub.middlewares.exceptions import (
         RepositoryFailList,
-        RepositoryNotFound,
         EnterpriseFailCreate,
         EnterpriseAlreadyExists,
         EnterpriseFailDelete,
@@ -17,7 +16,8 @@ from taskhub.middlewares.exceptions import (
         EnterpriseFailAddedUser,
         UserNotFound,
         EnterpriseFailRemoveUser,
-        InputEmptyOrNone
+        InputEmptyOrNone,
+        InputExceededCharacterLimit
 )
 class EnterpriseService:
     def get_enterprise(enterprise_id:str) -> Enterprise:
@@ -66,27 +66,39 @@ class EnterpriseService:
 
 
     def create_enterprise(
-            git_owner_id: str,
+            git_owner: 'User',
             name_enterprise: str,
-            git_enterprise_id: Optional[str] = None,
-            enterprise_id: Optional[str] = None
+            git_enterprise_id: Optional[str] = None
     ) -> Enterprise:
         try:
-            user = UserService.get_user(git_owner_id)
-            if Enterprise.objects(nameEnterprise=name_enterprise).first():
+            if not isinstance(git_owner, User):
+                raise InputEmptyOrNone("Enterprise creator must be a User instance")
+
+            if not getattr(git_owner, "gitId", None) or not git_owner.gitId.strip():
+                raise InputEmptyOrNone("Enterprise creator must have a valid gitId")
+
+            if not name_enterprise or not name_enterprise.strip():
+                raise InputEmptyOrNone(f"Value input name enterprise cannot be empty or None")
+
+
+            if len(name_enterprise)>100:
+                raise InputExceededCharacterLimit(f"Enterprise name must be 100 characters or less. Provided: {len(name_enterprise)} characters")
+            
+            if Enterprise.objects(nameEnterprise__iexact=name_enterprise).first():
                 raise EnterpriseAlreadyExists(f"Enterprise with name '{name_enterprise}' already exists")
             
             enterprise_id = git_enterprise_id or str(uuid.uuid4())
+
             enterprise = Enterprise(
-                owner_Id=user,
+                owner_Id=git_owner,
                 enterpriseId=enterprise_id,
                 nameEnterprise=name_enterprise,
                 gitId_enterprise=git_enterprise_id,
-                devs_enterprise=[user]
+                devs_enterprise=[git_owner]
             )
             enterprise.save()
             return enterprise
-        except (UserNotFound, EnterpriseNotFound):
+        except (InputEmptyOrNone, InputExceededCharacterLimit, EnterpriseAlreadyExists):
             raise
         except Exception as e:
             raise EnterpriseFailCreate(f"Failed to create Enterprise: {str(e)}") from e
