@@ -5,7 +5,7 @@ from mongoengine import Document, StringField, DateTimeField, ReferenceField, Li
 class Enterprise(Document):
     owner_Id = ReferenceField('User', required=True)
     devs_enterprise = ListField(ReferenceField('User'))
-    gitId_enterprise = StringField(max_length=100, unique=True)
+    gitId_enterprise = StringField(max_length=100, unique = True, sparse=True)
     enterpriseId = StringField(max_length=100, required=True, unique=True)
     nameEnterprise = StringField(max_length=100, required=True, unique=True)
     repositorys_Id = ListField(ReferenceField('Repository')) 
@@ -16,7 +16,6 @@ class Enterprise(Document):
         'collection': 'enterprises', 
         'indexes': [
             'enterpriseId',
-            'nameEnterprise', 
             {'fields': ['created_at'], 'expireAfterSeconds': 3600*24*365},
         ]
     }
