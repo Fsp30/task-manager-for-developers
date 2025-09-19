@@ -155,7 +155,6 @@ class EnterpriseService:
                 enterprise.devs_enterprise.extend(new_devs_to_add)
                 enterprise.save()
                 
-                # Log de auditoria
                 added_ids = [dev.gitId for dev in new_devs_to_add]
                 logger.info(
                     f"Users {added_ids} added to enterprise {enterprise.enterpriseId} "
@@ -172,21 +171,69 @@ class EnterpriseService:
             )
             raise EnterpriseFailAddedUser(f"Failed to add users to enterprise ID: '{enterprise.enterpriseId}';  {str(e)}") from e
 
-    def delete_dev_to_enterprise(enterprise_id: str, git_dev_id: str) -> List[User]:
+    def remove_dev_to_enterprise(
+            enterprise: Enterprise,
+            creator_enterprise: User,
+            devs_remove: Union[User, List[User]]
+        ) -> List[User]:
         try:
-            enterprise = EnterpriseService.get_enterprise(enterprise_id)
-            dev_to_remove = UserService.get_user(git_dev_id)
+            if not isinstance(enterprise, Enterprise):
+                raise InputEmptyOrNone("Enterprise must be a valid instance")
             
-            if dev_to_remove in enterprise.devs_enterprise:
-                enterprise.devs_enterprise.remove(dev_to_remove)
+            if not enterprise.enterpriseId or not enterprise.enterpriseId.strip():
+                raise InputEmptyOrNone("Enterprise must have a valid ID")
+            
+            if not isinstance(creator_enterprise, User):
+                raise InputEmptyOrNone("Performing user must be a User instance")
+            
+            if not creator_enterprise.gitId or not creator_enterprise.gitId.strip():
+                raise InputEmptyOrNone("Performing user must have a valid gitId")
+
+            if creator_enterprise != enterprise.owner_Id:
+                raise EnterprisePermissionDenied(f"User {creator_enterprise.gitId} does not creator to the enterprise")
+        
+            if devs_remove is None:
+                return list(enterprise.devs_enterprise)
+
+            devs_to_remove = devs_remove if isinstance(devs_remove, list) else [devs_remove]
+
+            if not devs_to_remove:
+                return list(enterprise.devs_enterprise)
+            
+            for i, dev_remove in enumerate(devs_to_remove):
+                if not isinstance(dev_remove, User):
+                    raise InputEmptyOrNone(f"Delete user at index {i} must be a User instance") 
+                if not dev_remove.gitId or not dev_remove.gitId.strip():
+                    raise InputEmptyOrNone(f"Delete user at index {i} must have a valid gitId")
+            
+            existing_dev_ids = {dev.gitId for dev in enterprise.devs_enterprise}
+
+            list_devs_remove = [
+                dev_remove for dev_remove in devs_to_remove
+                if dev_remove.gitId in existing_dev_ids
+            ]
+            if creator_enterprise in list_devs_remove:
+                raise EnterpriseFailRemoveUser("You can't delete the creator")
+
+            if list_devs_remove:
+                for dev in list_devs_remove:
+                    logger.info(
+                        f"Creator: {creator_enterprise.gitId} removed Developer"
+                        f"{dev.gitId} from enterprise {enterprise.enterpriseId}"
+                    )
+                    enterprise.devs_enterprise.remove(dev)
                 enterprise.save()
             
             return list(enterprise.devs_enterprise)
-        except (UserNotFound, EnterpriseNotFound):
+        
+        except (InputEmptyOrNone, EnterprisePermissionDenied, EnterpriseFailRemoveUser):
             raise
         except Exception as e:
-            raise EnterpriseFailRemoveUser(f"Failed to remove dev '{git_dev_id}': {str(e)}") from e
-
+            logger.error(
+                f"Erro ao remover dev(s) da enterprise {getattr(enterprise, 'enterpriseId', None)} "
+                f"por usuário {getattr(creator_enterprise, 'gitId', None)}: {e}"
+            )
+            raise EnterpriseFailRemoveUser(f"Failed remove dev(s) from enterprise '{enterprise.enterpriseId}'; {str(e)}" ) from e
 
 
     def delete_enterprise(git_owner_id: str, enterprise_id: str) -> bool:
