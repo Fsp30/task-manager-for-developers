@@ -322,10 +322,9 @@ class TestAddDevsInEnterprise:
         assert len(result) == 101  
     
 
-    @pytest.mark.now
     @pytest.mark.security
     def test_add_devs_with_malicious_input(self, default_enterprise, default_user, user_factory):
-        """Test adding developers with potentially malicious input"""
+        
         malicious_users = [
             User(gitId="'; DROP TABLE users; --", email="test@email1.com", userName="SQL Injection"),
             User(gitId="<script>alert('xss')</script>", email="test@email2.com", userName="XSS Attempt"),
