@@ -1,5 +1,6 @@
 import uuid
-from typing import Optional, List
+import logging
+from typing import Optional, List, Union
 from taskhub.core.models import Enterprise
 from taskhub.core.models import User
 from taskhub.core.models import Repository
@@ -17,8 +18,12 @@ from taskhub.middlewares.exceptions import (
         UserNotFound,
         EnterpriseFailRemoveUser,
         InputEmptyOrNone,
-        InputExceededCharacterLimit
+        InputExceededCharacterLimit,
+        EnterprisePermissionDenied
 )
+
+logger = logging.getLogger('taskhub.enterprise_service')
+
 class EnterpriseService:
     def get_enterprise(enterprise_id:str) -> Enterprise:
         try:    
@@ -105,21 +110,67 @@ class EnterpriseService:
 
 
 
-    def add_dev_in_enterprise(enterprise_id: str, git_dev_id: str) -> List[User]:
+    def add_devs_in_enterprise(
+        enterprise: Enterprise, 
+        git_dev_enterprise: User, 
+        new_devs: Union[User, List[User]]
+        ) -> List[User]:
+
         try:
-            new_dev = UserService.get_user(git_dev_id)
-            enterprise = EnterpriseService.get_enterprise(enterprise_id)
+            if not isinstance(enterprise, Enterprise):
+                raise InputEmptyOrNone("Enterprise must be a valid instance")
             
-            if new_dev not in enterprise.devs_enterprise:
-                enterprise.devs_enterprise.append(new_dev)
+            if not enterprise.enterpriseId or not enterprise.enterpriseId.strip():
+                raise InputEmptyOrNone("Enterprise must have a valid ID")
+            
+            if not isinstance(git_dev_enterprise, User):
+                raise InputEmptyOrNone("Performing user must be a User instance")
+            
+            if not git_dev_enterprise.gitId or not git_dev_enterprise.gitId.strip():
+                raise InputEmptyOrNone("Performing user must have a valid gitId")
+
+            devs_to_add = new_devs if isinstance(new_devs, list) else [new_devs]
+            
+            if not devs_to_add:
+                return list(enterprise.devs_enterprise)  
+
+            for i, new_dev in enumerate(devs_to_add):
+                if not isinstance(new_dev, User):
+                    raise InputEmptyOrNone(f"New user at index {i} must be a User instance")
+                if not new_dev.gitId or not new_dev.gitId.strip():
+                    raise InputEmptyOrNone(f"New user at index {i} must have a valid gitId")
+
+            existing_dev_ids = {dev.gitId for dev in enterprise.devs_enterprise}
+            if git_dev_enterprise.gitId not in existing_dev_ids:
+                raise EnterprisePermissionDenied(
+                    f"User {git_dev_enterprise.gitId} does not belong to the enterprise"
+                )
+
+            new_devs_to_add = [
+                new_dev for new_dev in devs_to_add 
+                if new_dev.gitId not in existing_dev_ids
+            ]
+
+            if new_devs_to_add:
+                enterprise.devs_enterprise.extend(new_devs_to_add)
                 enterprise.save()
-            
+                
+                # Log de auditoria
+                added_ids = [dev.gitId for dev in new_devs_to_add]
+                logger.info(
+                    f"Users {added_ids} added to enterprise {enterprise.enterpriseId} "
+                    f"by {git_dev_enterprise.gitId}. Total devs: {len(enterprise.devs_enterprise)}"
+                )
+
             return list(enterprise.devs_enterprise)
-        except (UserNotFound, EnterpriseNotFound):
+            
+        except (InputEmptyOrNone, EnterprisePermissionDenied):
             raise
         except Exception as e:
-            raise EnterpriseFailAddedUser(f"Failed to add dev '{git_dev_id}' to enterprise '{enterprise_id}': {str(e)}") from e
-        
+            logger.error(
+                f"Failed to add users to enterprise {getattr(enterprise, 'enterpriseId', 'unknown')}: {str(e)}"
+            )
+            raise EnterpriseFailAddedUser(f"Failed to add users to enterprise ID: '{enterprise.enterpriseId}';  {str(e)}") from e
 
     def delete_dev_to_enterprise(enterprise_id: str, git_dev_id: str) -> List[User]:
         try:

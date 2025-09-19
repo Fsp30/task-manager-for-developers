@@ -265,7 +265,6 @@ class TestCreateEnterprise:
         saved = Enterprise.objects(nameEnterprise=malicious_name).first()
         assert saved is not None
 
-    @pytest.mark.now
     @pytest.mark.security
     def test_create_enterprise_with_xss_attempt(self, default_user):
         xss_name = "<script>alert('xss')</script>"
