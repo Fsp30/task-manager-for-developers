@@ -1,4 +1,4 @@
-from taskhub.middlewares.exceptions.base_exception_handler import custom_exception_handler, InputExceededCharacterLimit, InvalidEmailFormat, InputEmptyOrNone
+from taskhub.middlewares.exceptions.base_exception_handler import custom_exception_handler, InputExceededCharacterLimit, InvalidEmailFormat, InputEmptyOrNone, DomainNoChange
 
 from taskhub.middlewares.exceptions.user.user_exception_handler import (
     UserAlreadyExists,
