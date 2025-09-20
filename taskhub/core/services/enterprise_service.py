@@ -15,10 +15,10 @@ from taskhub.middlewares.exceptions import (
         UserFailList,
         EnterpriseFailDetail,
         EnterpriseFailAddedUser,
-        UserNotFound,
         EnterpriseFailRemoveUser,
         InputEmptyOrNone,
         InputExceededCharacterLimit,
+        DomainNoChange,
         EnterprisePermissionDenied
 )
 
@@ -230,8 +230,8 @@ class EnterpriseService:
             raise
         except Exception as e:
             logger.error(
-                f"Erro ao remover dev(s) da enterprise {getattr(enterprise, 'enterpriseId', None)} "
-                f"por usuário {getattr(creator_enterprise, 'gitId', None)}: {e}"
+                f"Error removing dev(s) from enterprise {getattr(enterprise, 'enterpriseId', None)} "
+                f"by user {getattr(creator_enterprise, 'gitId', None)}: {e}"
             )
             raise EnterpriseFailRemoveUser(f"Failed remove dev(s) from enterprise '{enterprise.enterpriseId}'; {str(e)}" ) from e
 
@@ -276,31 +276,56 @@ class EnterpriseService:
             raise EnterpriseFailDelete(f"Failed to delete enterprise with ID: '{enterprise.enterpriseId}': {str(e)}") from e
 
     def update_enterprise(
-        git_owner_id: str,
-        enterprise_id: str,
-        name_enterprise: Optional[str] = None,
+        git_owner: User,
+        enterprise: Enterprise,
+        name_enterprise: str,
     ) -> Enterprise:
         try:
-            UserService.get_user(git_owner_id)
-            enterprise = EnterpriseService.get_enterprise(enterprise_id)
-            
-            if str(enterprise.owner_Id) != git_owner_id:
-                raise EnterpriseFailUpdate(f"User '{git_owner_id}' is not the owner of enterprise '{enterprise_id}'")
-    
-            if name_enterprise and name_enterprise != enterprise.nameEnterprise:
-                if Enterprise.objects(nameEnterprise=name_enterprise).first():
-                    raise EnterpriseAlreadyExists(f"Enterprise with name '{name_enterprise}' already exists")
 
-            if name_enterprise is not None:
-                enterprise.nameEnterprise = name_enterprise
+            if not name_enterprise or not name_enterprise.strip():
+                raise InputEmptyOrNone("Name Enterprise must be filled in")
             
+            if len(name_enterprise) > 100:
+                raise InputExceededCharacterLimit(f"Enterprise name must be 100 characters or less. Provided: {len(name_enterprise)} characters")
+            
+            if not isinstance(enterprise, Enterprise):
+                raise InputEmptyOrNone("Enterprise must be a valid instance")
+            
+            if not enterprise.enterpriseId or not enterprise.enterpriseId.strip():
+                raise InputEmptyOrNone("Enterprise must have a valid ID")
+            
+            if not isinstance(git_owner, User):
+                raise InputEmptyOrNone("Performing user must be a User instance")
+            
+            if not git_owner.gitId or not git_owner.gitId.strip():
+                raise InputEmptyOrNone("Performing user must have a valid gitId")
+
+
+            if git_owner != enterprise.owner_Id:
+                raise EnterprisePermissionDenied(f"User {git_owner.gitId} does not creator to the enterprise")
+
+            if name_enterprise == enterprise.nameEnterprise:
+                raise DomainNoChange("A change is necessary")
+            
+            if Enterprise.objects(nameEnterprise=name_enterprise, id__ne=enterprise.id).first():
+                raise EnterpriseAlreadyExists(f"Enterprise with name '{name_enterprise}' already exists")
+
+            logger.info(
+                f"Update enterprise: {enterprise.enterpriseId} by Creator: {git_owner.gitId}"
+            )         
+
+            enterprise.nameEnterprise = name_enterprise   
             enterprise.save()
-            return enterprise
+            return enterprise.reload() 
             
-        except (UserNotFound, EnterpriseNotFound, EnterpriseAlreadyExists):
+        except (InputExceededCharacterLimit ,InputEmptyOrNone, EnterprisePermissionDenied, DomainNoChange,EnterpriseAlreadyExists):
             raise
         except Exception as e:
-            raise EnterpriseFailUpdate(f"Failed to update enterprise with ID '{enterprise_id}': {str(e)}") from e
+            logger.error(
+                f"Error update enterprise {getattr(enterprise, 'enterpriseId', None)} "
+                f"by user {getattr(git_owner, 'gitId', None)}: {e}"
+            )
+            raise EnterpriseFailUpdate(f"Failed to update enterprise with ID '{enterprise.enterpriseId}': {str(e)}") from e
             
 
 
