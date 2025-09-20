@@ -58,3 +58,9 @@ class InvalidEmailFormat(CustomAppException):
     default_detail = "Falha ao adicionar email "
     default_code = "verification_email_no_match"
     app_code = AppCode.USER_INVALID_EMAIL
+
+class DomainNoChange(CustomAppException):
+    status_code = ErrorsAppStatus.BAD_REQUEST
+    default_detail = "Valor identico ao anterior "
+    default_code = "value_equal_to_previous"
+    app_code = AppCode.DOMAIN_NO_CHANGE
