@@ -236,21 +236,44 @@ class EnterpriseService:
             raise EnterpriseFailRemoveUser(f"Failed remove dev(s) from enterprise '{enterprise.enterpriseId}'; {str(e)}" ) from e
 
 
-    def delete_enterprise(git_owner_id: str, enterprise_id: str) -> bool:
+    def delete_enterprise(enterprise: Enterprise, creator_enterprise: User) -> bool:
         try:
-            UserService.get_user(git_owner_id)
-            enterprise = EnterpriseService.get_enterprise(enterprise_id)
+            if not isinstance(enterprise, Enterprise):
+                raise InputEmptyOrNone("Enterprise must be a valid instance")
             
-            if str(enterprise.owner_Id) != git_owner_id:
-                raise EnterpriseFailDelete(f"User '{git_owner_id}' is not the owner of enterprise '{enterprise_id}'")
+            if not enterprise.enterpriseId or not enterprise.enterpriseId.strip():
+                raise InputEmptyOrNone("Enterprise must have a valid ID")
             
+            if not isinstance(creator_enterprise, User):
+                raise InputEmptyOrNone("Performing user must be a User instance")
+            
+            if not creator_enterprise.gitId or not creator_enterprise.gitId.strip():
+                raise InputEmptyOrNone("Performing user must have a valid gitId")
+
+            if creator_enterprise != enterprise.owner_Id:
+                raise EnterprisePermissionDenied(f"User {creator_enterprise.gitId} does not creator to the enterprise")
+            try:
+                Enterprise.objects.get(enterpriseId=enterprise.enterpriseId)
+            except Enterprise.DoesNotExist:
+                raise EnterpriseNotFound(f"Enterprise with ID '{enterprise.enterpriseId}' does not exist")
+                
+            logger.info(
+                f"Creator: {creator_enterprise.gitId} deleted "
+                f"Enterprise: {enterprise.enterpriseId}"
+            )
             enterprise.delete()
             return True
             
-        except (UserNotFound, EnterpriseNotFound):
+        except (InputEmptyOrNone, EnterprisePermissionDenied, EnterpriseNotFound):
             raise
         except Exception as e:
-            raise EnterpriseFailDelete(f"Failed to delete enterprise with ID '{enterprise_id}': {str(e)}") from e
+            enterprise_id = getattr(enterprise, 'enterpriseId', 'invalid_enterprise_object')
+            creator = getattr(creator_enterprise, 'gitId', 'invalid_creator_object')
+            logger.error(
+                f"Failed delete enterprise {enterprise_id}"
+                f"by your creator {creator}"
+            )
+            raise EnterpriseFailDelete(f"Failed to delete enterprise with ID: '{enterprise.enterpriseId}': {str(e)}") from e
 
     def update_enterprise(
         git_owner_id: str,
