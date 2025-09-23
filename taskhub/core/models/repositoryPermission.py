@@ -4,7 +4,7 @@ from datetime import UTC
 
 class RepositoryPermission(Document):
     repositoryPermissionId = StringField(required=True, unique=True)
-    admin_repository = ReferenceField('Repository', required=True)
+    repository = ReferenceField('Repository', required=True)
     admin_users = ListField(ReferenceField('User'))
     created_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))
     updated_at = DateTimeField(default=datetime.datetime.now(tz=datetime.timezone.utc))   

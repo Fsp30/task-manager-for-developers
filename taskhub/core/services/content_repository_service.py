@@ -1,8 +1,9 @@
 import uuid, datetime
+from datetime import UTC
 from enum import Enum
 from typing import Optional,List
 from taskhub.core.models import ContentRepository
-from taskhub.core.models import Repository
+from taskhub.core.models import Repository, User
 from taskhub.core.services.repository_service import RepositoryService
 from taskhub.core.services.user_service import UserService
 from taskhub.core.services.repository_permission_service import PermissionsService
@@ -28,7 +29,7 @@ class ContentRepositoryService:
             if not content:
                 raise ContentRepositoryNotFound(f"Content Repository with ID '{content_repository_id}' not found")
             
-            permission = PermissionsService.get_permission_repository(str(content.repositoryId.id), git_user_id)
+            permission = PermissionsService.get_permission_repository(str(content.repositoryId.repository_id), git_user_id)
 
             if user not in permission.admin_users:
                 raise ContentRepositoryPermissionDenied(
@@ -49,16 +50,15 @@ class ContentRepositoryService:
             ) from e
 
     def create_content_repository(
-        repository: 'Repository', 
-        git_creator_id: str,
+        repository: Repository, 
+        creator_repo: User,
         content_type: str = 'content_repository',
         working_tag: Optional[str] = None,
         chat_id: Optional[str] = None
     ) -> ContentRepository:
 
         try:
-            UserService.get_user(git_creator_id)
-            permission = PermissionsService.get_permission_repository( git_creator_id, str(repository.repository_id))
+            permission = PermissionsService.get_permission_repository(repository, creator_repo)
             
             content_id = str(uuid.uuid4())
             chat_id = chat_id or str(uuid.uuid4())
@@ -70,8 +70,8 @@ class ContentRepositoryService:
                 working_tag=working_tag,
                 chat_id=chat_id,
                 content_type=content_type,
-                created_at=datetime.datetime.utcnow(),
-                updated_at=datetime.datetime.utcnow()
+                created_at=datetime.datetime.now(UTC),
+                updated_at=datetime.datetime.now(UTC),
             )
             
             content.save()

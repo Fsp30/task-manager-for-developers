@@ -256,7 +256,7 @@ def default_repository_permissions():
     for i, repo in enumerate(repositories):
         perm = RepositoryPermission(
             repositoryPermissionId=f"perm-{i}",
-            admin_repository=repo,
+            repository=repo,
             admin_users=[user],
         )
         perm.save()
@@ -303,12 +303,10 @@ def default_repository():
 
     permissions = RepositoryPermission(
         repositoryPermissionId="perm_repo_id",
-        admin_repository=repository, 
+        repository=repository, 
         admin_users=[creator] + admins
     )
     permissions.save()
-
-    repository.admin_repository = permissions
     repository.save()
 
     return repository

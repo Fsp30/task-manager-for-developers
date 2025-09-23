@@ -1,5 +1,5 @@
 from taskhub.infra.database.redis.connect_redis import redis_client
-from datetime import datetime 
+from datetime import datetime, UTC
 import json
 
 r = redis_client
@@ -15,7 +15,7 @@ class ChatService:
                 key = f"chat:{chat_id}"
                 data = {
                         "userId": userId,
-                        "timestamp": datetime.utcnow().isoformat(), 
+                        "timestamp": datetime.datetime.now(UTC),
                         "message": message
                 }
                 r.rpush(key, json.dumps(data))

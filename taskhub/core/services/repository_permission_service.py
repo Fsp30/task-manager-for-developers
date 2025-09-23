@@ -1,5 +1,6 @@
 from typing import Optional, List
 import uuid, datetime
+import logging
 from datetime import UTC
 from taskhub.core.models import( 
     RepositoryPermission,
@@ -25,25 +26,53 @@ from taskhub.middlewares.exceptions import (
 
 
 )
+
+logger = logging.getLogger('taskhub.core.services.repository_permission_service')
+
 class PermissionsService:
-    def get_permission_repository(repository: 'Repository', git_user:'User') -> RepositoryPermission:
+    def get_permission_repository(repository: Repository, git_user: User) -> RepositoryPermission:
         try:
-            if not repository.admin_repository:
-                raise RepositoryPermissionNotFound(f"Not permission found for repository {repository.repository_id}")
+            if not isinstance(git_user, User):
+                raise InputEmptyOrNone("Performing user must be a User instance")
+
+            if not getattr(git_user, "gitId", None) or not git_user.gitId.strip():
+                raise InputEmptyOrNone("Performing user must have a valid gitId")
             
-            permissions = repository.admin_repository
+            if not isinstance(repository, Repository):
+                raise InputEmptyOrNone("Invalid repository instance")
+
+            if not getattr(repository, "repository_id", None) or not repository.repository_id.strip():
+                raise InputEmptyOrNone("Repository must have a valid repository_id")
+            
+            if not repository.admin_repository:
+                raise RepositoryPermissionNotFound(f"No admin reference found for repository {repository.repository_id}")
+            
+            permissions = RepositoryPermission.objects(admin_repository=repository.admin_repository).first()
+            
+            if not permissions:
+                raise RepositoryPermissionNotFound(f"No permissions found for repository {repository.repository_id}")
 
             if git_user not in permissions.admin_users:
                 raise UserPermissionDenied(
                     f"User {git_user.gitId} has no permission to access repository {repository.repository_id}"
                 )
-            
+
+            logger.info(
+                f"Retrieved repository permissions {permissions.repositoryPermissionId} for user {git_user.gitId}"
+            )
             return permissions
             
-        except (RepositoryNotFound, UserPermissionDenied):
+        except (InputEmptyOrNone, RepositoryPermissionNotFound, UserPermissionDenied):
             raise
         except Exception as e:
-            raise RepositoryPermissionFailDetail(f"Failed to get repository permission : {str(e)}") from e
+            logger.error(
+                f"Error retrieving repository permission for repo {getattr(repository, 'repository_id', None)} "
+                f"by user {getattr(git_user, 'gitId', None)}: {e}"
+            )
+            raise RepositoryPermissionFailDetail(
+                f"Failed to get repository permission for repo {getattr(repository, 'repository_id', None)}: {str(e)}"
+            ) from e
+
 
     def get_all_devs(repository_permission_id:str, git_user_id:str) -> List[User]:
         try:
@@ -63,7 +92,7 @@ class PermissionsService:
 
             permission = RepositoryPermission(
                 repositoryPermissionId=str(uuid.uuid4()),
-                admin_repository=repository,
+                repository=repository,
                 admin_users=[creator_repo], 
                 created_at=datetime.datetime.now(UTC),
                 updated_at=datetime.datetime.now(UTC)  
